@@ -1,6 +1,6 @@
-import contextlib
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
+import github
 import pytest
 
 from ghsearch.gh_search import GHSearch
@@ -8,15 +8,20 @@ from ghsearch.gh_search import GHSearch
 from . import build_mock_result
 
 
+@pytest.fixture
+def mock_client():
+    return Mock(spec=github.Github)
+
+
 @pytest.fixture(autouse=True)
 def mock_click():
     with patch("ghsearch.gh_search.click") as mock:
+        yield mock
 
-        @contextlib.contextmanager
-        def passthroughcontext(iterable, *args, **kwargs):
-            yield iterable
 
-        mock.progressbar.side_effect = passthroughcontext
+@pytest.fixture(autouse=True)
+def mock_progress_printer():
+    with patch("ghsearch.gh_search.ProgressPrinter") as mock:
         yield mock
 
 

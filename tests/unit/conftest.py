@@ -1,9 +1,18 @@
-from unittest.mock import Mock
+from unittest.mock import patch
 
-import github
 import pytest
 
 
 @pytest.fixture
-def mock_client():
-    return Mock(spec=github.Github)
+def mock_click_echo():
+    with patch("click.echo") as mock:
+        yield mock
+
+
+@pytest.fixture
+def assert_click_echo_calls(mock_click_echo):
+    def _fn(*calls):
+        mock_click_echo.assert_has_calls(calls, any_order=False)
+        assert mock_click_echo.call_count == len(calls)
+
+    return _fn

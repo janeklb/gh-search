@@ -9,6 +9,12 @@ from . import build_mock_result
 
 
 @pytest.fixture(autouse=True)
+def mock_progress_printer():
+    with patch("ghsearch.gh_search.ProgressPrinter") as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
 def mock_build_client():
     with patch("ghsearch.main.build_client") as mock:
         mock.return_value.search_code.return_value = [
@@ -18,21 +24,6 @@ def mock_build_client():
         ]
         mock.return_value.get_rate_limit.side_effect = [StubObject(search=10), StubObject(search=9)]
         yield mock
-
-
-@pytest.fixture(autouse=True)
-def mock_click_echo():
-    with patch("click.echo") as mock:
-        yield mock
-
-
-@pytest.fixture
-def assert_click_echo_calls(mock_click_echo):
-    def _fn(*calls):
-        mock_click_echo.assert_has_calls(calls, any_order=False)
-        assert mock_click_echo.call_count == len(calls)
-
-    return _fn
 
 
 def test_run(assert_click_echo_calls):
@@ -49,9 +40,6 @@ def test_run_verbose(assert_click_echo_calls):
     run("query", verbose=True)
     assert_click_echo_calls(
         call("Starting with GH Rate limit: 10"),
-        call("Checking result for org/repo1"),
-        call("Checking result for org/repo1"),
-        call("Checking result for org/repo2"),
         call("Skipping result for org/repo2 via not_archived_filter"),
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
