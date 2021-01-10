@@ -1,0 +1,19 @@
+.idea/
+
+# Python
+
+*.pyc
+.eggs/
+*.egg-info/
+
+# Virtualenv
+venv
+
+.DS_Store
+.project
+.pydevproject
+
+.cache
+
+.coverage
+/build
