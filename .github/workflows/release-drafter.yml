@@ -2,12 +2,12 @@ name: Release Drafter
 
 on:
   push:
-    # branches to consider in the event; optional, defaults to all
     branches:
       - master
 
 jobs:
-  update_release_draft:
+  update-draft-release:
+    name: Update Draft Release
     runs-on: ubuntu-latest
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "master"
