@@ -4,10 +4,15 @@ from setuptools import setup, find_packages
 
 
 def get_version():
-    # Versioning approach adopted as suggested in https://packaging.python.org/en/latest/single_source_version/
     curr_dir = os.path.dirname(os.path.realpath(__file__))
     with open(os.path.join(curr_dir, 'version.txt')) as version_file:
         return version_file.read().strip()
+
+
+def get_readme():
+    this_directory = os.path.abspath(os.path.dirname(__file__))
+    with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+        return f.read()
 
 
 install_requires = [
@@ -30,10 +35,12 @@ dev_requires = [
 setup(
     name="gh-search",
     version=get_version(),
-    url="git@github.com:janeklb/gh-search.git",
+    url="https://github.com/janeklb/gh-search",
     author="Janek Lasocki-Biczysko",
     author_email="janek.lb@gmail.net",
     description="Github search from the cli",
+    long_description=get_readme(),
+    long_description_content_type='text/markdown',
     packages=find_packages(),
     include_package_data=True,
     platforms="any",
