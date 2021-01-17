@@ -17,14 +17,14 @@ pip install gh-search
 
 ## Usage
 
-**IMPORTANT**: This tool requires that you GitHub token is available via the `GITHUB_TOKEN` envar.
+**IMPORTANT**: This tool requires that you GitHub token set on the `GITHUB_TOKEN` envar (or passed to the script via the `--github-token` option).
 
-Usage is simple. Invoke with `gh-search` and pass a query string as the first argument. For example, to search for the string "usage" in this repo:
+Invoke with `gh-search` and pass a query string as the first argument. For example, to search for the string "usage" in this repo:
 ```bash
 gh-search usage repo:janeklb/gh-search
 ```
 
-_Note that `repo:` is a search qualifier natively supported by the GitHub Search API. `gh-search` simply passes it along in the API request._
+_Note that `repo:` is a search qualifier natively supported by the GitHub Search API.
 
 `gh-search` also offers the following options
 
@@ -35,7 +35,7 @@ _Note that `repo:` is a search qualifier natively supported by the GitHub Search
 
 ### Enterprise
 
-If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envar with a URL to the v3 api endpoint. eg. `GITHUB_API_URL=https://git.mycompany.net/api/v3`
+If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envar with a URL to the v3 api endpoint. eg. `GITHUB_API_URL=https://git.mycompany.net/api/v3`. You can also use the `--github-api-url` option for this.
 
 ## Developing
 
