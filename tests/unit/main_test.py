@@ -35,7 +35,7 @@ def mock_build_client(mock_github):
 
 
 def test_run(assert_click_echo_calls):
-    run("query", [], "token")
+    run(["query"], "token")
     assert_click_echo_calls(
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
@@ -45,7 +45,7 @@ def test_run(assert_click_echo_calls):
 
 
 def test_run_with_qualifiers(assert_click_echo_calls):
-    run("query", ["org:foo", "filename:bar"], "token")
+    run(["query", "org:foo", "filename:bar"], "token")
     assert_click_echo_calls(
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query%20filename%3Abar"),
@@ -56,12 +56,12 @@ def test_run_with_qualifiers(assert_click_echo_calls):
 
 def test_run_bad_credentials(assert_click_echo_calls, mock_github):
     mock_github.search_code.side_effect = BadCredentialsException(404, "No!")
-    run("query", [], "bad-credentials")
+    run(["query"], "bad-credentials")
     assert_click_echo_calls(call('Bad Credentials: 404 "No!"\n\nrun gh-search --help', err=True))
 
 
 def test_run_verbose(assert_click_echo_calls):
-    run("query", [], "token", verbose=True)
+    run(["query"], "token", verbose=True)
     assert_click_echo_calls(
         call("Starting with GH Rate limit: 10"),
         call("Skipping result for org/repo2 via not_archived_filter"),
@@ -74,7 +74,7 @@ def test_run_verbose(assert_click_echo_calls):
 
 
 def test_run_include_archived(assert_click_echo_calls):
-    run("query", [], "token", include_archived=True)
+    run(["query"], "token", include_archived=True)
     assert_click_echo_calls(
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
@@ -86,7 +86,7 @@ def test_run_include_archived(assert_click_echo_calls):
 
 
 def test_run_content_filter(assert_click_echo_calls):
-    run("query", [], "token", content_filter="special content")
+    run(["query"], "token", content_filter="special content")
     assert_click_echo_calls(
         call("Results:"),
         call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
@@ -95,7 +95,7 @@ def test_run_content_filter(assert_click_echo_calls):
 
 
 def test_run_path_filter(assert_click_echo_calls):
-    run("query", [], "token", path_filter="file.txt")
+    run(["query"], "token", path_filter="file.txt")
     assert_click_echo_calls(
         call("Results:"),
         call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),

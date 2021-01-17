@@ -44,21 +44,21 @@ def mock_progress_printer():
 
 def test_get_filtered_results_calls_search_code_correctly(mock_client):
     ghsearch = GHSearch(mock_client, [])
-    ghsearch.get_filtered_results("name", ["org:janeklb", "filename:setup.py"])
+    ghsearch.get_filtered_results(["name", "org:janeklb", "filename:setup.py"])
 
     mock_client.search_code.assert_called_once_with(query="name org:janeklb filename:setup.py")
 
 
 def test_get_filtered_results_without_filters(mock_client, mock_result_1, mock_result_2, mock_result_3):
     ghsearch = GHSearch(mock_client, [])
-    repos = ghsearch.get_filtered_results("stub", ["org:stub"])
+    repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
     assert repos == {"org/repo1": [mock_result_1, mock_result_2], "org/repo2": [mock_result_3]}
 
 
 def test_get_filtered_results_with_filters(mock_client, mock_result_1, mock_result_2, mock_result_3):
     ghsearch = GHSearch(mock_client, [lambda x: x.path != "2.txt"])
-    repos = ghsearch.get_filtered_results("stub", ["org:stub"])
+    repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
     assert repos == {"org/repo1": [mock_result_1], "org/repo2": [mock_result_3]}
 
@@ -69,7 +69,7 @@ def test_get_filtered_results_verbose(mock_client, mock_result_1, mock_result_2,
 
     ghsearch = GHSearch(mock_client, [filter_fn], verbose=True)
 
-    repos = ghsearch.get_filtered_results("stub", ["org:stub"])
+    repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
     assert repos == {
         "org/repo1": [mock_result_1, mock_result_2],

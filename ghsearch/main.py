@@ -10,14 +10,14 @@ from ghsearch.filters import build_content_filter, build_not_archived_filter, bu
 from ghsearch.gh_search import GHSearch
 
 
-def _sanitize_qualifiers_for_search(qualifiers: List[str]) -> List[str]:
-    return [q for q in qualifiers if not (q.startswith("repo:") or q.startswith("org:"))]
+def _sanitize_qualifiers_for_search_url(query: List[str]) -> List[str]:
+    return [q for q in query if not (q.startswith("repo:") or q.startswith("org:"))]
 
 
-def _print_results(query: str, qualifiers: List[str], results: Dict[str, List[ContentFile]]) -> None:
+def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> None:
     sorted_results = sorted(results.items(), key=lambda kv: len(kv[1]), reverse=True)
 
-    q_param = parse.quote(" ".join([query, *_sanitize_qualifiers_for_search(qualifiers)]))
+    q_param = parse.quote(" ".join(_sanitize_qualifiers_for_search_url(query)))
     click.echo("Results:")
     for repo, repo_results in sorted_results:
         repo_result = repo_results[0]
@@ -43,15 +43,14 @@ def _build_filters(
 
 
 def run(
-    query,
-    qualifiers,
-    github_token,
-    github_api_url=None,
-    path_filter="",
-    content_filter="",
-    include_archived=False,
-    verbose=False,
-):
+    query: List[str],
+    github_token: str,
+    github_api_url: str = None,
+    path_filter: str = "",
+    content_filter: str = "",
+    include_archived: bool = False,
+    verbose: bool = False,
+) -> None:
     client = build_client(github_token, github_api_url)
     try:
         if verbose:
@@ -60,9 +59,9 @@ def run(
 
         filters = _build_filters(path_filter, include_archived, content_filter)
         gh_search = GHSearch(client, filters, verbose)
-        results = gh_search.get_filtered_results(query, qualifiers)
+        results = gh_search.get_filtered_results(query)
 
-        _print_results(query, qualifiers, results)
+        _print_results(query, results)
 
         if verbose:
             rate_limit = client.get_rate_limit()
@@ -80,14 +79,23 @@ def _create_none_value_validator(message):
     return _validator
 
 
-@click.command(context_settings={"max_content_width": 120})
-@click.argument("query")
-@click.argument("qualifiers", nargs=-1)
+def _ensure_search_term(ctx, param, value):
+    if any(":" not in word for word in value):
+        return value
+    raise click.UsageError("QUERY must contain at least one search term", ctx=ctx)
+
+
+@click.command(
+    help="QUERY must contain at least one search term, but may also contain search qualifiers"
+    " (https://docs.github.com/en/github/searching-for-information-on-github/searching-code)",
+    context_settings={"max_content_width": 120},
+)
+@click.argument("QUERY", nargs=-1, required=True, callback=_ensure_search_term)
 @click.option(
     "--github-token",
     envvar="GITHUB_TOKEN",
-    help="GitHub Auth Token. Will fall back on GITHUB_TOKEN envar.",
-    callback=_create_none_value_validator("GitHub token must be set via --github-token option or GITHUB_TOKEN envar."),
+    help="GitHub Auth Token. Will fall back on GITHUB_TOKEN envvar.",
+    callback=_create_none_value_validator("GitHub token must be set via --github-token option or GITHUB_TOKEN envvar."),
 )
 @click.option(
     "--github-api-url",
