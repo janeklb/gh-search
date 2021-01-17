@@ -24,7 +24,7 @@ Invoke with `gh-search` and pass a query string as the first argument. For examp
 gh-search usage repo:janeklb/gh-search
 ```
 
-_Note that `repo:` is a search qualifier natively supported by the GitHub Search API.
+_Note that `repo:` is a search qualifier natively supported by the GitHub Search API._
 
 `gh-search` also offers the following options
 
@@ -39,20 +39,6 @@ If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envvar 
 
 ## Developing
 
-### Install dev dependencies
-
-```bash
-make install-dev
-```
-
-### Run unit tests
-
-```bash
-make unit
-```
-
-### Run linters
-
-```bash
-make lint
-```
+- `make install-dev` install dev dependencies (set up your own virtual environment first)
+- `make unit` run unit tests
+- `make lint` run linters
