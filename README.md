@@ -21,7 +21,7 @@ pip install gh-search
 
 Usage is simple. Invoke with `gh-search` and pass a query string as the first argument. For example, to search for the string "usage" in this repo:
 ```bash
-gh-search "usage repo:janeklb/gh-search"
+gh-search usage repo:janeklb/gh-search
 ```
 
 _Note that `repo:` is a search qualifier natively supported by the GitHub Search API. `gh-search` simply passes it along in the API request._
