@@ -80,10 +80,7 @@ def _create_none_value_validator(message):
     return _validator
 
 
-@click.command(
-    help="[QUERY] can contain search qualifiers, for example 'lookingforthis repo:janeklb/gh-search'",
-    context_settings={"max_content_width": 120},
-)
+@click.command(context_settings={"max_content_width": 120})
 @click.argument("query")
 @click.argument("qualifiers", nargs=-1)
 @click.option(
