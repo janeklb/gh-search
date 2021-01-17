@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Callable, Dict, Iterable, List
+from typing import Callable, Dict, List
 
 import click
 import github
@@ -14,8 +14,8 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
-    def get_filtered_results(self, query: str, qualifiers: Iterable) -> Dict[str, List[ContentFile]]:
-        results = self.client.search_code(query=" ".join([query, *qualifiers]))
+    def get_filtered_results(self, query: List[str]) -> Dict[str, List[ContentFile]]:
+        results = self.client.search_code(query=" ".join(query))
         repos = defaultdict(list)
 
         with ProgressPrinter(overwrite=not self.verbose) as printer:
