@@ -1,4 +1,3 @@
-import os
 from unittest.mock import patch
 
 import pytest
@@ -13,14 +12,11 @@ def mock_github():
 
 
 def test_build_client_returns_github_instance(mock_github):
-    assert build_client() == mock_github.return_value
+    assert build_client("foo-token") == mock_github.return_value
 
 
 def test_build_client_passes_expected_parameters(mock_github):
-    with patch.dict(
-        os.environ, {"GITHUB_API_URL": "https://github.example.org/api/v3", "GITHUB_TOKEN": "foo-token"}, clear=True
-    ):
-        build_client()
+    build_client("foo-token", "https://github.example.org/api/v3")
 
     mock_github.assert_called_once_with(
         login_or_token="foo-token",
@@ -30,8 +26,7 @@ def test_build_client_passes_expected_parameters(mock_github):
 
 
 def test_build_client_passes_expected_parameters_defaults_github(mock_github):
-    with patch.dict(os.environ, {"GITHUB_TOKEN": "foo-token"}, clear=True):
-        build_client()
+    build_client("foo-token")
 
     mock_github.assert_called_once_with(
         login_or_token="foo-token",
