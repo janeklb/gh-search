@@ -16,4 +16,5 @@ venv
 .cache
 
 .coverage
+/htmlcov
 /build

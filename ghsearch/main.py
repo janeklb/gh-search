@@ -10,13 +10,18 @@ from ghsearch.filters import build_content_filter, build_not_archived_filter, bu
 from ghsearch.gh_search import GHSearch
 
 
-def _print_results(query: str, results: Dict[str, List[ContentFile]]) -> None:
+def _sanitize_qualifiers_for_search(qualifiers: List[str]) -> List[str]:
+    return [q for q in qualifiers if not (q.startswith("repo:") or q.startswith("org:"))]
+
+
+def _print_results(query: str, qualifiers: List[str], results: Dict[str, List[ContentFile]]) -> None:
     sorted_results = sorted(results.items(), key=lambda kv: len(kv[1]), reverse=True)
 
+    q_param = parse.quote(" ".join([query, *_sanitize_qualifiers_for_search(qualifiers)]))
     click.echo("Results:")
     for repo, repo_results in sorted_results:
         repo_result = repo_results[0]
-        url = f"{repo_result.repository.html_url}/search?utf8=✓&q={parse.quote(query)}"
+        url = f"{repo_result.repository.html_url}/search?utf8=✓&q={q_param}"
         click.echo(f" {len(repo_results)} - {repo}: {url}")
 
         repo_results.sort(key=lambda x: x.path)
@@ -38,7 +43,14 @@ def _build_filters(
 
 
 def run(
-    query, github_token, github_api_url=None, path_filter="", content_filter="", include_archived=False, verbose=False
+    query,
+    qualifiers,
+    github_token,
+    github_api_url=None,
+    path_filter="",
+    content_filter="",
+    include_archived=False,
+    verbose=False,
 ):
     client = build_client(github_token, github_api_url)
     try:
@@ -48,9 +60,9 @@ def run(
 
         filters = _build_filters(path_filter, include_archived, content_filter)
         gh_search = GHSearch(client, filters, verbose)
-        results = gh_search.get_filtered_results(query)
+        results = gh_search.get_filtered_results(query, qualifiers)
 
-        _print_results(query, results)
+        _print_results(query, qualifiers, results)
 
         if verbose:
             rate_limit = client.get_rate_limit()
@@ -73,6 +85,7 @@ def _create_none_value_validator(message):
     context_settings={"max_content_width": 120},
 )
 @click.argument("query")
+@click.argument("qualifiers", nargs=-1)
 @click.option(
     "--github-token",
     envvar="GITHUB_TOKEN",
