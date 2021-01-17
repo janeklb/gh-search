@@ -37,12 +37,13 @@ def _build_filters(
     return filters
 
 
-def run(query, path_filter="", content_filter="", include_archived=False, verbose=False):
-    client = build_client()
+def run(
+    query, github_token, github_api_url=None, path_filter="", content_filter="", include_archived=False, verbose=False
+):
+    client = build_client(github_token, github_api_url)
     try:
-        rate_limit = client.get_rate_limit()
-
         if verbose:
+            rate_limit = client.get_rate_limit()
             click.echo(f"Starting with GH Rate limit: {rate_limit.search}")
 
         filters = _build_filters(path_filter, include_archived, content_filter)
@@ -58,19 +59,31 @@ def run(query, path_filter="", content_filter="", include_archived=False, verbos
         click.echo(f"Bad Credentials: {e}\n\nrun gh-search --help", err=True)
 
 
-COMMAND_CONTEXT_SETTINGS = {"max_content_width": 120}
-COMMAND_HELP = """
-GitHub code search using the v3 api.
+def _create_none_value_validator(message):
+    def _validator(ctx, param, value):
+        if value is None:
+            raise click.UsageError(message, ctx=ctx)
+        return value
 
-Relies on GITHUB_TOKEN envar for authentication. Override GitHub API URL via GITHUB_API_URL envar
-(defaults to https://api.github.com).
-
-[QUERY] can contain search qualifiers, for example "lookingforthis repo:janeklb/gh-search"
-"""
+    return _validator
 
 
-@click.command(help=COMMAND_HELP, context_settings=COMMAND_CONTEXT_SETTINGS)
+@click.command(
+    help="[QUERY] can contain search qualifiers, for example 'lookingforthis repo:janeklb/gh-search'",
+    context_settings={"max_content_width": 120},
+)
 @click.argument("query")
+@click.option(
+    "--github-token",
+    envvar="GITHUB_TOKEN",
+    help="GitHub Auth Token. Will fall back on GITHUB_TOKEN envar.",
+    callback=_create_none_value_validator("GitHub token must be set via --github-token option or GITHUB_TOKEN envar."),
+)
+@click.option(
+    "--github-api-url",
+    envvar="GITHUB_API_URL",
+    help="Override default GitHub API URL. Can also specify via GITHUB_API_URL envvar.",
+)
 @click.option("-p", "--path-filter", help="Exclude results whose path (or part of path) does not match this.")
 @click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
 @click.option("-a", "--include-archived", help="Include results from archived repos.", default=False, is_flag=True)
