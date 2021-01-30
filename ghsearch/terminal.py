@@ -33,7 +33,7 @@ class ProgressPrinter(contextlib.AbstractContextManager):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.overwrite:
             self._overwrite_previous_line()
-            click.echo("\r" + SHOW_CURSOR)
+            click.echo("\r" + SHOW_CURSOR, nl=False)
         return None
 
     def _overwrite_previous_line(self, message=""):
