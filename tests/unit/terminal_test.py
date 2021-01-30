@@ -11,7 +11,7 @@ def test_progress_printer(assert_click_echo_calls):
     assert_click_echo_calls(
         call("\r\033[?25lHello!", nl=False),
         call("\r\033[?25l      ", nl=False),
-        call("\r\033[?25h"),
+        call("\r\033[?25h", nl=False),
     )
 
 

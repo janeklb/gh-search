@@ -101,3 +101,9 @@ def test_run_path_filter(assert_click_echo_calls):
         call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
         call("\t- file.txt"),
     )
+
+
+def test_run_no_results(assert_click_echo_calls, mock_github):
+    mock_github.search_code.return_value = []
+    run(["query"], "token")
+    assert_click_echo_calls(call("No results!"))
