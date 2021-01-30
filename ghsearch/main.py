@@ -15,6 +15,9 @@ def _sanitize_qualifiers_for_search_url(query: List[str]) -> List[str]:
 
 
 def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> None:
+    if len(results) == 0:
+        click.echo("No results!")
+        return
     sorted_results = sorted(results.items(), key=lambda kv: len(kv[1]), reverse=True)
 
     q_param = parse.quote(" ".join(_sanitize_qualifiers_for_search_url(query)))
