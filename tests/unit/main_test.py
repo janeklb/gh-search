@@ -23,7 +23,7 @@ def mock_github():
         build_mock_result("org/repo1", "file.txt"),
         build_mock_result("org/repo2", "src/other.py", archived=True),
     ]
-    mock.get_rate_limit.side_effect = [StubObject(search=10), StubObject(search=9)]
+    mock.get_rate_limit.side_effect = [StubObject(search=10, core=15), StubObject(search=9, core=11)]
     return mock
 
 
@@ -63,13 +63,13 @@ def test_run_bad_credentials(assert_click_echo_calls, mock_github):
 def test_run_verbose(assert_click_echo_calls):
     run(["query"], "token", verbose=True)
     assert_click_echo_calls(
-        call("Starting with GH Rate limit: 10"),
+        call("GH Rate limits: search=10, core=15"),
         call("Skipping result for org/repo2 via not_archived_filter"),
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
         call("\t- README.md"),
         call("\t- file.txt"),
-        call("Ending with GH Rate limit: 9"),
+        call("GH Rate limits: search=9, core=11"),
     )
 
 

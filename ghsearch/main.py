@@ -58,7 +58,7 @@ def run(
     try:
         if verbose:
             rate_limit = client.get_rate_limit()
-            click.echo(f"Starting with GH Rate limit: {rate_limit.search}")
+            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
 
         filters = _build_filters(path_filter, include_archived, content_filter)
         gh_search = GHSearch(client, filters, verbose)
@@ -68,7 +68,7 @@ def run(
 
         if verbose:
             rate_limit = client.get_rate_limit()
-            click.echo(f"Ending with GH Rate limit: {rate_limit.search}")
+            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
     except BadCredentialsException as e:
         click.echo(f"Bad Credentials: {e}\n\nrun gh-search --help", err=True)
 
