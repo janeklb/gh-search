@@ -6,10 +6,10 @@ install-dev:
 
 format:
 	isort -l 120 --profile black ghsearch/ tests/
-	black -l 120 -t py37 ghsearch/ tests/
+	black -l 120 -t py37 ghsearch/ tests/ *.py
 
 black:
-	black -l 120 -t py37 --check ghsearch/ tests/
+	black -l 120 -t py37 --check ghsearch/ tests/ *.py
 
 flake:
 	flake8 ghsearch/ tests/
