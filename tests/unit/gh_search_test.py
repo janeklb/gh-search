@@ -1,5 +1,6 @@
 from unittest.mock import Mock, patch
 
+import click
 import github
 import pytest
 
@@ -75,3 +76,13 @@ def test_get_filtered_results_verbose(mock_client, mock_result_1, mock_result_2,
         "org/repo1": [mock_result_1, mock_result_2],
     }
     mock_click.echo.assert_any_call("Skipping result for org/repo2 via filter_fn")
+
+
+def test_get_filtered_results_raises_github_exception(mock_client):
+    mock_client.search_code.side_effect = github.GithubException(
+        422, {"message": "Fail!", "errors": [{"message": "reason1"}, {"message": "reason2"}]}
+    )
+
+    ghsearch = GHSearch(mock_client, [])
+    with pytest.raises(click.ClickException):
+        ghsearch.get_filtered_results([])
