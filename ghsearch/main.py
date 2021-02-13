@@ -70,15 +70,11 @@ def run(
         if verbose:
             rate_limit = client.get_rate_limit()
             click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
-    except BadCredentialsException as e:
-        raise UsageError(f"Bad Credentials: {e}", click.get_current_context(silent=True))
-    except GithubException as e:
-        if e.status == 422:
-            message = e.data["message"]
-            errors = (
-                [error["message"] for error in e.data["errors"] if isinstance(error, dict)] if e.data["errors"] else []
-            )
-            raise UsageError(
-                f"{message} (GitHub Exception): {', '.join(errors)}", click.get_current_context(silent=True)
-            )
-        raise e
+    except BadCredentialsException as ex:
+        raise UsageError(f"Bad Credentials: {ex}", click.get_current_context(silent=True))
+    except GithubException as ex:
+        if ex.status == 422 and isinstance(ex.data, dict):
+            message = ex.data["message"]
+            errors = ", ".join(err["message"] for err in ex.data.get("errors", []) if isinstance(err, dict))
+            raise UsageError(f"{message} (GitHub Exception): {errors}", click.get_current_context(silent=True))
+        raise ex
