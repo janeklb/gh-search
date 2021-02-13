@@ -24,7 +24,16 @@ def mock_github():
         build_mock_result("org/repo1", "file.txt"),
         build_mock_result("org/repo2", "src/other.py", archived=True),
     ]
-    mock.get_rate_limit.side_effect = [StubObject(search=10, core=15), StubObject(search=9, core=11)]
+    mock.get_rate_limit.side_effect = [
+        StubObject(
+            search=StubObject(remaining=10, limit=10, reset="soon"),
+            core=StubObject(remaining=45, limit=50, reset="soon"),
+        ),
+        StubObject(
+            search=StubObject(remaining=9, limit=10, reset="even sooner"),
+            core=StubObject(remaining=43, limit=50, reset="even sooner"),
+        ),
+    ]
     return mock
 
 
@@ -64,13 +73,13 @@ def test_run_bad_credentials(assert_click_echo_calls, mock_github):
 def test_run_verbose(assert_click_echo_calls):
     run(["query"], "token", verbose=True)
     assert_click_echo_calls(
-        call("GH Rate limits: search=10, core=15"),
-        call("Skipping result for org/repo2 via not_archived_filter"),
+        call("Rate limits: 10/10 (search, resets soon), 45/50 (core, resets soon)"),
+        call("Skipping result for org/repo2 via NotArchivedFilter"),
+        call("Rate limits: 9/10 (search, resets even sooner), 43/50 (core, resets even sooner)"),
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
         call("\t- README.md"),
         call("\t- file.txt"),
-        call("GH Rate limits: search=9, core=11"),
     )
 
 

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List
+from typing import Dict, List
 from urllib import parse
 
 import click
@@ -7,7 +7,7 @@ from github.ContentFile import ContentFile
 from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
-from ghsearch.filters import build_content_filter, build_not_archived_filter, build_path_filter
+from ghsearch.filters import ContentFilter, Filter, NotArchivedFilter, PathFilter
 from ghsearch.gh_search import GHSearch
 
 
@@ -33,16 +33,14 @@ def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> N
             click.echo(f"\t- {result.path}")
 
 
-def _build_filters(
-    path_filter: str = None, include_archived: bool = True, content_filter: str = None
-) -> List[Callable]:
-    filters = []
+def _build_filters(path_filter: str = None, include_archived: bool = True, content_filter: str = None) -> List[Filter]:
+    filters: List[Filter] = []
     if path_filter:
-        filters.append(build_path_filter(path_filter))
+        filters.append(PathFilter(path_filter))
     if not include_archived:
-        filters.append(build_not_archived_filter())
+        filters.append(NotArchivedFilter())
     if content_filter:
-        filters.append(build_content_filter(content_filter))
+        filters.append(ContentFilter(content_filter))
     return filters
 
 
@@ -57,28 +55,16 @@ def run(
 ) -> None:
     client = build_client(github_token, github_api_url)
     try:
-        if verbose:
-            rate_limit = client.get_rate_limit()
-            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
-
         filters = _build_filters(path_filter, include_archived, content_filter)
         gh_search = GHSearch(client, filters, verbose)
         results = gh_search.get_filtered_results(query)
 
         _print_results(query, results)
-
-        if verbose:
-            rate_limit = client.get_rate_limit()
-            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
-    except BadCredentialsException as e:
-        raise UsageError(f"Bad Credentials: {e}", click.get_current_context(silent=True))
-    except GithubException as e:
-        if e.status == 422:
-            message = e.data["message"]
-            errors = (
-                [error["message"] for error in e.data["errors"] if isinstance(error, dict)] if e.data["errors"] else []
-            )
-            raise UsageError(
-                f"{message} (GitHub Exception): {', '.join(errors)}", click.get_current_context(silent=True)
-            )
-        raise e
+    except BadCredentialsException as ex:
+        raise UsageError(f"Bad Credentials: {ex}", click.get_current_context(silent=True))
+    except GithubException as ex:
+        if ex.status == 422 and isinstance(ex.data, dict):
+            message = ex.data["message"]
+            errors = ", ".join(err["message"] for err in ex.data.get("errors", []) if isinstance(err, dict))
+            raise UsageError(f"{message} (GitHub Exception): {errors}", click.get_current_context(silent=True))
+        raise ex

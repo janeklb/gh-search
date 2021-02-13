@@ -1,24 +1,27 @@
-from typing import Callable
-
 from github.ContentFile import ContentFile
 
 
-def build_content_filter(content_match: str) -> Callable[[ContentFile], bool]:
-    def content_filter(result: ContentFile) -> bool:
-        return content_match in result.decoded_content.decode("utf-8")
-
-    return content_filter
+class Filter:
+    def __call__(self, result: ContentFile) -> bool:
+        raise NotImplementedError
 
 
-def build_not_archived_filter() -> Callable[[ContentFile], bool]:
-    def not_archived_filter(result: ContentFile) -> bool:
+class ContentFilter(Filter):
+    def __init__(self, content_filter: str):
+        self.content_filter = content_filter
+
+    def __call__(self, result: ContentFile) -> bool:
+        return self.content_filter in result.decoded_content.decode("utf-8")
+
+
+class NotArchivedFilter(Filter):
+    def __call__(self, result: ContentFile) -> bool:
         return not result.repository.archived
 
-    return not_archived_filter
 
+class PathFilter(Filter):
+    def __init__(self, path_filter: str):
+        self.path_filter = path_filter
 
-def build_path_filter(path_match: str) -> Callable[[ContentFile], bool]:
-    def path_filter(result: ContentFile) -> bool:
-        return path_match in result.path
-
-    return path_filter
+    def __call__(self, result: ContentFile) -> bool:
+        return self.path_filter in result.path
