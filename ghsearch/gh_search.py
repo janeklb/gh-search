@@ -4,8 +4,17 @@ from typing import Callable, Dict, List
 import click
 import github
 from github.ContentFile import ContentFile
+from github.RateLimit import RateLimit
 
 from ghsearch.terminal import ProgressPrinter
+
+
+def _echo_rate_limits(rate_limit: RateLimit) -> None:
+    click.echo(
+        f"Rate limits:"
+        f" {rate_limit.search.remaining}/{rate_limit.search.limit} (search, resets {rate_limit.search.reset}),"
+        f" {rate_limit.core.remaining}/{rate_limit.core.limit} (core, resets {rate_limit.core.reset})"
+    )
 
 
 class GHSearch:
@@ -15,6 +24,10 @@ class GHSearch:
         self.verbose = verbose
 
     def get_filtered_results(self, query: List[str]) -> Dict[str, List[ContentFile]]:
+        rate_limit = self.client.get_rate_limit()
+        if self.verbose:
+            _echo_rate_limits(rate_limit)
+
         results = self.client.search_code(query=" ".join(query))
         repos = defaultdict(list)
 
@@ -26,6 +39,9 @@ class GHSearch:
                     repos[result.repository.full_name].append(result)
                 elif self.verbose:
                     click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
+
+        if self.verbose:
+            _echo_rate_limits(self.client.get_rate_limit())
 
         return repos
 

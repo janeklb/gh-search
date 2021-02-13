@@ -57,19 +57,11 @@ def run(
 ) -> None:
     client = build_client(github_token, github_api_url)
     try:
-        if verbose:
-            rate_limit = client.get_rate_limit()
-            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
-
         filters = _build_filters(path_filter, include_archived, content_filter)
         gh_search = GHSearch(client, filters, verbose)
         results = gh_search.get_filtered_results(query)
 
         _print_results(query, results)
-
-        if verbose:
-            rate_limit = client.get_rate_limit()
-            click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
     except BadCredentialsException as ex:
         raise UsageError(f"Bad Credentials: {ex}", click.get_current_context(silent=True))
     except GithubException as ex:
