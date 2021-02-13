@@ -2,8 +2,9 @@ from typing import Callable, Dict, List
 from urllib import parse
 
 import click
-from github import BadCredentialsException
+from click import UsageError
 from github.ContentFile import ContentFile
+from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
 from ghsearch.filters import build_content_filter, build_not_archived_filter, build_path_filter
@@ -70,42 +71,14 @@ def run(
             rate_limit = client.get_rate_limit()
             click.echo(f"GH Rate limits: search={rate_limit.search}, core={rate_limit.core}")
     except BadCredentialsException as e:
-        click.echo(f"Bad Credentials: {e}\n\nrun gh-search --help", err=True)
-
-
-def _create_none_value_validator(message):
-    def _validator(ctx, param, value):
-        if value is None:
-            raise click.UsageError(message, ctx=ctx)
-        return value
-
-    return _validator
-
-
-@click.command(
-    help="QUERY must contain at least one search term, but may also contain search qualifiers"
-    " (https://docs.github.com/en/github/searching-for-information-on-github/searching-code)",
-    context_settings={"max_content_width": 120},
-)
-@click.argument("QUERY", nargs=-1, required=True)
-@click.option(
-    "--github-token",
-    envvar="GITHUB_TOKEN",
-    help="GitHub Auth Token. Will fall back on GITHUB_TOKEN envvar.",
-    callback=_create_none_value_validator("GitHub token must be set via --github-token option or GITHUB_TOKEN envvar."),
-)
-@click.option(
-    "--github-api-url",
-    envvar="GITHUB_API_URL",
-    help="Override default GitHub API URL. Can also specify via GITHUB_API_URL envvar.",
-)
-@click.option("-p", "--path-filter", help="Exclude results whose path (or part of path) does not match this.")
-@click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
-@click.option("-a", "--include-archived", help="Include results from archived repos.", default=False, is_flag=True)
-@click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
-def cli(*args, **kwargs):
-    run(*args, **kwargs)
-
-
-if __name__ == "__main__":
-    cli()
+        raise UsageError(f"Bad Credentials: {e}", click.get_current_context(silent=True))
+    except GithubException as e:
+        if e.status == 422:
+            message = e.data["message"]
+            errors = (
+                [error["message"] for error in e.data["errors"] if isinstance(error, dict)] if e.data["errors"] else []
+            )
+            raise UsageError(
+                f"{message} (GitHub Exception): {', '.join(errors)}", click.get_current_context(silent=True)
+            )
+        raise e
