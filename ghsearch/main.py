@@ -82,18 +82,12 @@ def _create_none_value_validator(message):
     return _validator
 
 
-def _ensure_search_term(ctx, param, value):
-    if any(":" not in word for word in value):
-        return value
-    raise click.UsageError("QUERY must contain at least one search term", ctx=ctx)
-
-
 @click.command(
     help="QUERY must contain at least one search term, but may also contain search qualifiers"
     " (https://docs.github.com/en/github/searching-for-information-on-github/searching-code)",
     context_settings={"max_content_width": 120},
 )
-@click.argument("QUERY", nargs=-1, required=True, callback=_ensure_search_term)
+@click.argument("QUERY", nargs=-1, required=True)
 @click.option(
     "--github-token",
     envvar="GITHUB_TOKEN",
