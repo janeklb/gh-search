@@ -1,11 +1,12 @@
 from collections import defaultdict
-from typing import Callable, Dict, List
+from typing import Dict, List
 
 import click
 import github
 from github.ContentFile import ContentFile
 from github.RateLimit import RateLimit
 
+from ghsearch.filters import Filter
 from ghsearch.terminal import ProgressPrinter
 
 
@@ -18,7 +19,7 @@ def _echo_rate_limits(rate_limit: RateLimit) -> None:
 
 
 class GHSearch:
-    def __init__(self, client: github.Github, filters: List[Callable], verbose: bool = False):
+    def __init__(self, client: github.Github, filters: List[Filter], verbose: bool = False):
         self.client = client
         self.filters = filters
         self.verbose = verbose
@@ -48,5 +49,5 @@ class GHSearch:
     def _should_exclude(self, result):
         for result_filter in self.filters:
             if not result_filter(result):
-                return result_filter.__name__
+                return result_filter.__class__.__name__
         return False

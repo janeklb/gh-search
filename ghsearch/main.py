@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List
+from typing import Dict, List
 from urllib import parse
 
 import click
@@ -7,7 +7,7 @@ from github.ContentFile import ContentFile
 from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
-from ghsearch.filters import build_content_filter, build_not_archived_filter, build_path_filter
+from ghsearch.filters import ContentFilter, Filter, NotArchivedFilter, PathFilter
 from ghsearch.gh_search import GHSearch
 
 
@@ -33,16 +33,14 @@ def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> N
             click.echo(f"\t- {result.path}")
 
 
-def _build_filters(
-    path_filter: str = None, include_archived: bool = True, content_filter: str = None
-) -> List[Callable]:
-    filters = []
+def _build_filters(path_filter: str = None, include_archived: bool = True, content_filter: str = None) -> List[Filter]:
+    filters: List[Filter] = []
     if path_filter:
-        filters.append(build_path_filter(path_filter))
+        filters.append(PathFilter(path_filter))
     if not include_archived:
-        filters.append(build_not_archived_filter())
+        filters.append(NotArchivedFilter())
     if content_filter:
-        filters.append(build_content_filter(content_filter))
+        filters.append(ContentFilter(content_filter))
     return filters
 
 

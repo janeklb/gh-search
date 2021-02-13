@@ -74,7 +74,7 @@ def test_run_verbose(assert_click_echo_calls):
     run(["query"], "token", verbose=True)
     assert_click_echo_calls(
         call("Rate limits: 10/10 (search, resets soon), 45/50 (core, resets soon)"),
-        call("Skipping result for org/repo2 via not_archived_filter"),
+        call("Skipping result for org/repo2 via NotArchivedFilter"),
         call("Rate limits: 9/10 (search, resets even sooner), 43/50 (core, resets even sooner)"),
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),

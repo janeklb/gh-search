@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 from github.ContentFile import ContentFile
 
-from ghsearch.filters import build_content_filter, build_not_archived_filter, build_path_filter
+from ghsearch.filters import ContentFilter, NotArchivedFilter, PathFilter
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def mock_content_file():
     ],
 )
 def test_build_path_filter(path_matcher, path, expected_result, mock_content_file):
-    path_filter = build_path_filter(path_matcher)
+    path_filter = PathFilter(path_matcher)
     mock_content_file.path = path
 
     assert path_filter(mock_content_file) is expected_result
@@ -35,7 +35,7 @@ def test_build_path_filter(path_matcher, path, expected_result, mock_content_fil
     ],
 )
 def test_build_content_filter(content_matcher, content_bytes, expected_result, mock_content_file):
-    content_filter = build_content_filter(content_matcher)
+    content_filter = ContentFilter(content_matcher)
     mock_content_file.decoded_content = content_bytes
 
     assert content_filter(mock_content_file) is expected_result
@@ -49,7 +49,7 @@ def test_build_content_filter(content_matcher, content_bytes, expected_result, m
     ],
 )
 def test_build_not_archived_filter(archived, expected_result, mock_content_file):
-    not_archived_filter = build_not_archived_filter()
+    not_archived_filter = NotArchivedFilter()
     mock_content_file.repository.archived = archived
 
     assert not_archived_filter(mock_content_file) is expected_result
