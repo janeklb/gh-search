@@ -66,9 +66,9 @@ def test_run_bad_credentials(assert_click_echo_calls, mock_github):
 def test_run_verbose(assert_click_echo_calls):
     run(["query"], "token", verbose=True)
     assert_click_echo_calls(
-        call("Rate limits: 10/10 (search, resets soon), 45/50 (core, resets soon)"),
+        call("Core rate limit: 45/50 (resets soon), Search rate limit: 10/10 (resets soon)"),
         call("Skipping result for org/repo2 via NotArchivedFilter"),
-        call("Rate limits: 9/10 (search, resets even sooner), 43/50 (core, resets even sooner)"),
+        call("Core rate limit: 43/50 (resets even sooner), Search rate limit: 9/10 (resets even sooner)"),
         call("Results:"),
         call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
         call("\t- README.md"),
