@@ -1,4 +1,3 @@
-from types import SimpleNamespace as StubObject
 from unittest.mock import Mock, patch
 
 import github
@@ -6,7 +5,7 @@ import pytest
 
 from ghsearch.gh_search import GHSearch
 
-from . import build_mock_result
+from . import MockPaginatedList, MockRateLimit, build_mock_result
 
 
 @pytest.fixture
@@ -27,10 +26,8 @@ def mock_result_3():
 @pytest.fixture
 def mock_client(mock_result_1, mock_result_2, mock_result_3):
     mock = Mock(spec=github.Github)
-    mock.search_code.return_value = [mock_result_1, mock_result_2, mock_result_3]
-    mock.get_rate_limit.return_value = StubObject(
-        search=StubObject(remaining=10, limit=10, reset="now"), core=StubObject(remaining=10, limit=10, reset="now")
-    )
+    mock.search_code.return_value = MockPaginatedList(mock_result_1, mock_result_2, mock_result_3)
+    mock.get_rate_limit.return_value = MockRateLimit(10, 10, "now", 10, 10, "now")
     return mock
 
 
@@ -77,3 +74,23 @@ def test_get_filtered_results_verbose(mock_client, mock_result_1, mock_result_2,
     assert repos == {"org/repo1": [mock_result_2]}
     mock_click.echo.assert_any_call("Skipping result for org/repo1 via Mock")
     mock_click.echo.assert_any_call("Skipping result for org/repo2 via Mock")
+
+
+def test_get_filtered_results_crosses_threshold(mock_client, mock_click):
+    mock_client.get_rate_limit.return_value = MockRateLimit(1, 10, "sometime in the future", 10, 10, "now")
+    mock_filter = Mock()
+    mock_filter.uses_core_api = True
+
+    ghsearch = GHSearch(mock_client, [mock_filter])
+    ghsearch.get_filtered_results(["query", "org:bort"])
+
+    mock_click.confirm.assert_called_once_with(
+        """
+Warning: you are at risk of using more than the remaining 10% of your core api limit.
+Your search yielded 3 results, and each result may trigger up to 1 core api call(s) per result.
+
+Your current usage is 1/10 (resets at sometime in the future)
+
+Do you want to continue?""".strip(),
+        abort=True,
+    )

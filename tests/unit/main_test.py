@@ -1,4 +1,3 @@
-from types import SimpleNamespace as StubObject
 from unittest.mock import Mock, call, patch
 
 import click
@@ -7,7 +6,7 @@ from github import BadCredentialsException, Github, GithubException
 
 from ghsearch.main import run
 
-from . import build_mock_result
+from . import MockPaginatedList, MockRateLimit, build_mock_result
 
 
 @pytest.fixture(autouse=True)
@@ -19,20 +18,14 @@ def mock_progress_printer():
 @pytest.fixture
 def mock_github():
     mock = Mock(spec=Github)
-    mock.search_code.return_value = [
+    mock.search_code.return_value = MockPaginatedList(
         build_mock_result("org/repo1", "README.md", decoded_content=b"special content"),
         build_mock_result("org/repo1", "file.txt"),
         build_mock_result("org/repo2", "src/other.py", archived=True),
-    ]
+    )
     mock.get_rate_limit.side_effect = [
-        StubObject(
-            search=StubObject(remaining=10, limit=10, reset="soon"),
-            core=StubObject(remaining=45, limit=50, reset="soon"),
-        ),
-        StubObject(
-            search=StubObject(remaining=9, limit=10, reset="even sooner"),
-            core=StubObject(remaining=43, limit=50, reset="even sooner"),
-        ),
+        MockRateLimit(45, 50, "soon", 10, 10, "soon"),
+        MockRateLimit(43, 50, "even sooner", 9, 10, "even sooner"),
     ]
     return mock
 
@@ -114,7 +107,7 @@ def test_run_path_filter(assert_click_echo_calls):
 
 
 def test_run_no_results(assert_click_echo_calls, mock_github):
-    mock_github.search_code.return_value = []
+    mock_github.search_code.return_value = MockPaginatedList()
     run(["query"], "token")
     assert_click_echo_calls(call("No results!"))
 
