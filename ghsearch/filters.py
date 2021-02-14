@@ -19,8 +19,13 @@ class ContentFilter(Filter):
 
 
 class NotArchivedFilter(Filter):
+    def __init__(self):
+        self.cache = {}
+
     def __call__(self, result: ContentFile) -> bool:
-        return not result.repository.archived
+        if result.repository.full_name not in self.cache:
+            self.cache[result.repository.full_name] = not result.repository.archived
+        return self.cache[result.repository.full_name]
 
 
 class PathFilter(Filter):

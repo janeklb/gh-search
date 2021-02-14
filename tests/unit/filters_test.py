@@ -1,14 +1,10 @@
-from unittest.mock import Mock
+from unittest.mock import PropertyMock
 
 import pytest
-from github.ContentFile import ContentFile
 
 from ghsearch.filters import ContentFilter, NotArchivedFilter, PathFilter
 
-
-@pytest.fixture
-def mock_content_file():
-    return Mock(spec=ContentFile)
+from . import build_mock_content_file
 
 
 @pytest.mark.parametrize(
@@ -20,9 +16,9 @@ def mock_content_file():
         ("other.py", "path/to/file.py", False),
     ],
 )
-def test_build_path_filter(path_matcher, path, expected_result, mock_content_file):
+def test_build_path_filter(path_matcher, path, expected_result):
     path_filter = PathFilter(path_matcher)
-    mock_content_file.path = path
+    mock_content_file = build_mock_content_file(path=path)
 
     assert path_filter(mock_content_file) is expected_result
     assert path_filter.uses_core_api is False
@@ -35,9 +31,9 @@ def test_build_path_filter(path_matcher, path, expected_result, mock_content_fil
         ("another str", b"I'm still looking for this str", False),
     ],
 )
-def test_build_content_filter(content_matcher, content_bytes, expected_result, mock_content_file):
+def test_build_content_filter(content_matcher, content_bytes, expected_result):
     content_filter = ContentFilter(content_matcher)
-    mock_content_file.decoded_content = content_bytes
+    mock_content_file = build_mock_content_file(decoded_content=content_bytes)
 
     assert content_filter(mock_content_file) is expected_result
     assert content_filter.uses_core_api is True
@@ -50,9 +46,33 @@ def test_build_content_filter(content_matcher, content_bytes, expected_result, m
         (True, False),
     ],
 )
-def test_build_not_archived_filter(archived, expected_result, mock_content_file):
+def test_build_not_archived_filter(archived, expected_result):
     not_archived_filter = NotArchivedFilter()
-    mock_content_file.repository.archived = archived
+    mock_content_file = build_mock_content_file(archived=archived)
 
     assert not_archived_filter(mock_content_file) is expected_result
     assert not_archived_filter.uses_core_api is True
+
+
+def test_not_archived_filter_caches_access_to_archived_property():
+    not_archived_filter = NotArchivedFilter()
+
+    archived1_1 = PropertyMock(return_value=True)
+    repo1_1 = build_mock_content_file("org/repo1", "file1.txt")
+    type(repo1_1.repository).archived = archived1_1
+
+    archived1_2 = PropertyMock(return_value=True)
+    repo1_2 = build_mock_content_file("org/repo1", "file2.txt")
+    type(repo1_2.repository).archived = archived1_2
+
+    archived2_1 = PropertyMock(return_value=True)
+    repo2_1 = build_mock_content_file("org/repo2", "file1.txt")
+    type(repo2_1.repository).archived = archived2_1
+
+    not_archived_filter(repo1_1)
+    not_archived_filter(repo1_2)
+    not_archived_filter(repo2_1)
+
+    archived1_1.assert_called_once()
+    archived1_2.assert_not_called()
+    archived2_1.assert_called_once()

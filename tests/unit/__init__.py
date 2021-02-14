@@ -19,7 +19,9 @@ class MockRateLimit:
         self.search = SimpleNamespace(remaining=search_remaining, limit=search_limit, reset=search_reset)
 
 
-def build_mock_result(repo_full_name: str, path: str, archived: bool = False, decoded_content: bytes = b""):
+def build_mock_content_file(
+    repo_full_name: str = "org/repo", path: str = "path", archived: bool = False, decoded_content: bytes = b""
+):
     mock = Mock(spec=ContentFile)
     mock.repository.full_name = repo_full_name
     mock.repository.archived = archived

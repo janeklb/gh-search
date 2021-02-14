@@ -5,22 +5,22 @@ import pytest
 
 from ghsearch.gh_search import GHSearch
 
-from . import MockPaginatedList, MockRateLimit, build_mock_result
+from . import MockPaginatedList, MockRateLimit, build_mock_content_file
 
 
 @pytest.fixture
 def mock_result_1():
-    return build_mock_result("org/repo1", "1.txt")
+    return build_mock_content_file("org/repo1", "1.txt")
 
 
 @pytest.fixture
 def mock_result_2():
-    return build_mock_result("org/repo1", "2.txt")
+    return build_mock_content_file("org/repo1", "2.txt")
 
 
 @pytest.fixture
 def mock_result_3():
-    return build_mock_result("org/repo2", "3.txt")
+    return build_mock_content_file("org/repo2", "3.txt")
 
 
 @pytest.fixture
