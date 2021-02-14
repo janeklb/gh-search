@@ -50,5 +50,5 @@ setup(
     extras_require={
         "dev": dev_requires,
     },
-    entry_points={"console_scripts": ["gh-search=cli:cli"]},
+    entry_points={"console_scripts": ["gh-search=ghsearch.cli:cli"]},
 )
