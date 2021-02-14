@@ -6,7 +6,7 @@ from github import BadCredentialsException, Github, GithubException
 
 from ghsearch.main import run
 
-from . import MockPaginatedList, MockRateLimit, build_mock_result
+from . import MockPaginatedList, MockRateLimit, build_mock_content_file
 
 
 @pytest.fixture(autouse=True)
@@ -19,9 +19,9 @@ def mock_progress_printer():
 def mock_github():
     mock = Mock(spec=Github)
     mock.search_code.return_value = MockPaginatedList(
-        build_mock_result("org/repo1", "README.md", decoded_content=b"special content"),
-        build_mock_result("org/repo1", "file.txt"),
-        build_mock_result("org/repo2", "src/other.py", archived=True),
+        build_mock_content_file("org/repo1", "README.md", decoded_content=b"special content"),
+        build_mock_content_file("org/repo1", "file.txt"),
+        build_mock_content_file("org/repo2", "src/other.py", archived=True),
     )
     mock.get_rate_limit.side_effect = [
         MockRateLimit(45, 50, "soon", 10, 10, "soon"),
