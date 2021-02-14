@@ -1,3 +1,5 @@
+from unittest.mock import PropertyMock
+
 import pytest
 
 from ghsearch.filters import ContentFilter, NotArchivedFilter, PathFilter
@@ -50,3 +52,27 @@ def test_build_not_archived_filter(archived, expected_result):
 
     assert not_archived_filter(mock_content_file) is expected_result
     assert not_archived_filter.uses_core_api is True
+
+
+def test_not_archived_filter_caches_access_to_archived_property():
+    not_archived_filter = NotArchivedFilter()
+
+    archived1_1 = PropertyMock(return_value=True)
+    repo1_1 = build_mock_content_file("org/repo1", "file1.txt")
+    type(repo1_1.repository).archived = archived1_1
+
+    archived1_2 = PropertyMock(return_value=True)
+    repo1_2 = build_mock_content_file("org/repo1", "file2.txt")
+    type(repo1_2.repository).archived = archived1_2
+
+    archived2_1 = PropertyMock(return_value=True)
+    repo2_1 = build_mock_content_file("org/repo2", "file1.txt")
+    type(repo2_1.repository).archived = archived2_1
+
+    not_archived_filter(repo1_1)
+    not_archived_filter(repo1_2)
+    not_archived_filter(repo2_1)
+
+    archived1_1.assert_called_once()
+    archived1_2.assert_not_called()
+    archived2_1.assert_called_once()
