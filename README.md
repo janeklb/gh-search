@@ -4,9 +4,10 @@ GitHub code search from your cli
 
 ## Features
 
-* All features of [GitHub Search API](https://docs.github.com/en/free-pro-team@latest/rest/reference/search#search-code) (eg. search qualifiers)
+* Uses [GitHub Search API](https://docs.github.com/en/free-pro-team@latest/rest/reference/search#search-code)
 * Apply filters on the GitHub Search API response (eg. ignore archived repos or search for additional text in matched content)
 * View search results grouped by repo
+* Core API rate limit check (prevent accidentally consuming your entire core api quota) 
 * Works with GitHub Enterprise
 
 ## Installation

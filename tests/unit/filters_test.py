@@ -25,6 +25,7 @@ def test_build_path_filter(path_matcher, path, expected_result, mock_content_fil
     mock_content_file.path = path
 
     assert path_filter(mock_content_file) is expected_result
+    assert path_filter.uses_core_api is False
 
 
 @pytest.mark.parametrize(
@@ -39,6 +40,7 @@ def test_build_content_filter(content_matcher, content_bytes, expected_result, m
     mock_content_file.decoded_content = content_bytes
 
     assert content_filter(mock_content_file) is expected_result
+    assert content_filter.uses_core_api is True
 
 
 @pytest.mark.parametrize(
@@ -53,3 +55,4 @@ def test_build_not_archived_filter(archived, expected_result, mock_content_file)
     mock_content_file.repository.archived = archived
 
     assert not_archived_filter(mock_content_file) is expected_result
+    assert not_archived_filter.uses_core_api is True
