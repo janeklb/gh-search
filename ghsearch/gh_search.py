@@ -42,9 +42,8 @@ Do you want to continue?""".strip(),
 
 def _echo_rate_limits(rate_limit: RateLimit) -> None:
     click.echo(
-        f"Rate limits:"
-        f" {rate_limit.search.remaining}/{rate_limit.search.limit} (search, resets {rate_limit.search.reset}),"
-        f" {rate_limit.core.remaining}/{rate_limit.core.limit} (core, resets {rate_limit.core.reset})"
+        f"Core rate limit: {rate_limit.core.remaining}/{rate_limit.core.limit} (resets {rate_limit.core.reset}), "
+        f"Search rate limit: {rate_limit.search.remaining}/{rate_limit.search.limit} (resets {rate_limit.search.reset})"
     )
 
 

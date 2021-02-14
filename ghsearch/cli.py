@@ -1,4 +1,5 @@
 import click
+
 from ghsearch.main import run
 
 
