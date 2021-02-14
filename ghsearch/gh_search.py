@@ -10,15 +10,34 @@ from github.RateLimit import RateLimit
 from ghsearch.filters import Filter
 from ghsearch.terminal import ProgressPrinter
 
-CORE_LIMIT_THRESHOLD = 0.1
-CORE_LIMIT_WARNING_MESSAGE = """
-Warning: you are at risk of using more than the remaining {threshold:.0%} of your core api limit.
-Your search yielded {num} results, and each result may trigger up to {calls_per_res} core api call(s) per result.
+CORE_LIMIT_RELATIVE_THRESHOLD = 0.1
+CORE_LIMIT_ABSOLUTE_THRESHOLD = 500
 
-Your current usage is {remaining}/{limit} (resets at {reset})
 
-Do you want to continue?
-"""
+def _confirm_continue_many_calls(core_rate: Rate, num_results: int, calls_per_res: int) -> None:
+    click.confirm(
+        f"""
+Warning: you are about to potentially make more than {CORE_LIMIT_ABSOLUTE_THRESHOLD} core api requests.
+Your search yielded {num_results} results, and gh-search may make up to {calls_per_res} core api call(s) per result.
+
+Your current core api usage is {core_rate.remaining}/{core_rate.limit} (resets {core_rate.reset})
+
+Do you want to continue?""".strip(),
+        abort=True,
+    )
+
+
+def _confirm_continue_near_limit(core_rate: Rate, num_results: int, calls_per_res: int) -> None:
+    click.confirm(
+        f"""
+Warning: you are at risk of using more than the remaining {CORE_LIMIT_RELATIVE_THRESHOLD:.0%} of your core api limit.
+Your search yielded {num_results} results, and gh-search may make up to {calls_per_res} core api call(s) per result.
+
+Your current core api usage is {core_rate.remaining}/{core_rate.limit} (resets {core_rate.reset})
+
+Do you want to continue?""".strip(),
+        abort=True,
+    )
 
 
 def _echo_rate_limits(rate_limit: RateLimit) -> None:
@@ -68,16 +87,9 @@ class GHSearch:
         max_core_api_calls_per_result = sum(bool(f.uses_core_api) for f in self.filters)
         if max_core_api_calls_per_result > 0:
 
-            remaining_worst_case = core_rate.remaining - (num_results * max_core_api_calls_per_result)
-            if remaining_worst_case / core_rate.limit < CORE_LIMIT_THRESHOLD:
-                click.confirm(
-                    CORE_LIMIT_WARNING_MESSAGE.format(
-                        threshold=CORE_LIMIT_THRESHOLD,
-                        reset=core_rate.reset,
-                        limit=core_rate.limit,
-                        remaining=core_rate.remaining,
-                        num=num_results,
-                        calls_per_res=max_core_api_calls_per_result,
-                    ).strip(),
-                    abort=True,
-                )
+            num_core_api_calls_worst_case = num_results * max_core_api_calls_per_result
+            remaining_worst_case = core_rate.remaining - num_core_api_calls_worst_case
+            if remaining_worst_case / core_rate.limit < CORE_LIMIT_RELATIVE_THRESHOLD:
+                _confirm_continue_near_limit(core_rate, num_results, max_core_api_calls_per_result)
+            elif num_core_api_calls_worst_case > CORE_LIMIT_ABSOLUTE_THRESHOLD:
+                _confirm_continue_many_calls(core_rate, num_results, max_core_api_calls_per_result)

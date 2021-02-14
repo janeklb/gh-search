@@ -5,9 +5,9 @@ from github.ContentFile import ContentFile
 
 
 class MockPaginatedList:
-    def __init__(self, *items):
+    def __init__(self, *items, total_count=None):
         self.items = items
-        self.totalCount = len(items)
+        self.totalCount = total_count if total_count else len(items)
 
     def __iter__(self):
         return iter(self.items)
