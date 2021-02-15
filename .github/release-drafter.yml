@@ -1,4 +1,8 @@
 template: |
-  ## What’s Changed
+  ## What's New :octocat:
+
+  - ...
+
+  ### PRs merged in this release
 
   $CHANGES

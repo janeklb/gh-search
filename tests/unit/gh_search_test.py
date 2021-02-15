@@ -86,7 +86,7 @@ def test_get_filtered_results_near_limit(mock_client, mock_click):
 
     mock_click.confirm.assert_called_once_with(
         """
-Warning: you are at risk of using more than the remaining 10% of your core api limit.
+Warning: you are at risk of going below 10% of your remaining core api rate limit.
 Your search yielded 3 results, and gh-search may make up to 1 core api call(s) per result.
 
 Your current core api usage is 1/10 (resets sometime in the future)
