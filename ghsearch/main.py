@@ -15,6 +15,13 @@ def _sanitize_qualifiers_for_search_url(query: List[str]) -> List[str]:
     return [q for q in query if not (q.startswith("repo:") or q.startswith("org:"))]
 
 
+def _print_repo_names_only(results: Dict[str, List[ContentFile]]) -> None:
+    if len(results) == 0:
+        return
+    for repo in results:
+        click.echo(repo)
+
+
 def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> None:
     if len(results) == 0:
         click.echo("No results!")
@@ -51,6 +58,7 @@ def run(
     path_filter: str = "",
     content_filter: str = "",
     include_archived: bool = False,
+    repos_with_matches: bool = False,
     verbose: bool = False,
 ) -> None:
     client = build_client(github_token, github_api_url)
@@ -59,7 +67,11 @@ def run(
         gh_search = GHSearch(client, filters, verbose)
         results = gh_search.get_filtered_results(query)
 
-        _print_results(query, results)
+        if repos_with_matches:
+            _print_repo_names_only(results)
+        else:
+            _print_results(query, results)
+
     except BadCredentialsException as ex:
         raise UsageError(f"Bad Credentials: {ex}", click.get_current_context(silent=True))
     except GithubException as ex:
