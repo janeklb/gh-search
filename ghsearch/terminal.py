@@ -1,5 +1,6 @@
 import contextlib
 import re
+import sys
 
 import click
 
@@ -18,14 +19,15 @@ def _term_len(x):
 
 class ProgressPrinter(contextlib.AbstractContextManager):
     def __init__(self, overwrite=True):
-        self.overwrite = overwrite
+        self.overwrite = overwrite and sys.stdout.isatty()
+        self.verbose = not overwrite
         self.last_width = 0
 
     def __enter__(self):
         def printer(message):
             if self.overwrite:
                 self._overwrite_previous_line(message)
-            else:
+            elif self.verbose:
                 click.echo(message)
 
         return printer
