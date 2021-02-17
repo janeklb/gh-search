@@ -16,8 +16,6 @@ def _sanitize_qualifiers_for_search_url(query: List[str]) -> List[str]:
 
 
 def _print_repo_names_only(results: Dict[str, List[ContentFile]]) -> None:
-    if len(results) == 0:
-        return
     for repo in results:
         click.echo(repo)
 
