@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import github
 import pytest
 
+from ghsearch.filters import FilterException
 from ghsearch.gh_search import GHSearch
 
 from . import MockPaginatedList, MockRateLimit, build_mock_content_file
@@ -62,6 +63,17 @@ def test_get_filtered_results_with_filters(mock_client, mock_result_1, mock_resu
     repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
     assert repos == {"org/repo1": [mock_result_1], "org/repo2": [mock_result_3]}
+
+
+def test_get_filtered_results_with_exception_when_filtering(mock_client, mock_result_1, mock_progress_printer):
+    mock_client.search_code.return_value = MockPaginatedList(mock_result_1)
+
+    ghsearch = GHSearch(mock_client, [Mock(side_effect=FilterException(Mock(), "BOOO"))])
+
+    repos = ghsearch.get_filtered_results(["query", "org:bort"])
+
+    assert len(repos) == 0
+    mock_progress_printer.return_value.__enter__.return_value.assert_any_call("BOOO", force=True)
 
 
 def test_get_filtered_results_verbose(mock_client, mock_result_1, mock_result_2, mock_result_3, mock_click):

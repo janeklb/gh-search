@@ -24,9 +24,12 @@ class ProgressPrinter(contextlib.AbstractContextManager):
         self.last_width = 0
 
     def __enter__(self):
-        def printer(message):
+        def printer(message, force=False):
             if self.overwrite:
-                self._overwrite_previous_line(message)
+                if force:
+                    click.echo(f"\n{message}")
+                else:
+                    self._overwrite_previous_line(message)
             elif self.verbose:
                 click.echo(message)
 
