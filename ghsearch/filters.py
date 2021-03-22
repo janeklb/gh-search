@@ -1,4 +1,11 @@
 from github.ContentFile import ContentFile
+from github.GithubException import GithubException
+
+
+class FilterException(BaseException):
+    def __init__(self, filter, message):
+        super().__init__(message)
+        self.filter = filter
 
 
 class Filter:
@@ -15,7 +22,11 @@ class ContentFilter(Filter):
         self.content_filter = content_filter
 
     def __call__(self, result: ContentFile) -> bool:
-        return self.content_filter in result.decoded_content.decode("utf-8")
+        try:
+            return self.content_filter in result.decoded_content.decode("utf-8")
+        except GithubException as e:
+            message = f"Error reading content from {result.repository.full_name}/{result.path}: {e.data['message']}"
+            raise FilterException(self, message) from e
 
 
 class NotArchivedFilter(Filter):

@@ -1,8 +1,9 @@
 from unittest.mock import PropertyMock
 
 import pytest
+from github.GithubException import GithubException
 
-from ghsearch.filters import ContentFilter, NotArchivedFilter, PathFilter
+from ghsearch.filters import ContentFilter, FilterException, NotArchivedFilter, PathFilter
 
 from . import build_mock_content_file
 
@@ -37,6 +38,17 @@ def test_build_content_filter(content_matcher, content_bytes, expected_result):
 
     assert content_filter(mock_content_file) is expected_result
     assert content_filter.uses_core_api is True
+
+
+def test_content_filter_with_github_exception():
+    content_filter = ContentFilter("something")
+    mock_content_file = build_mock_content_file()
+    type(mock_content_file).decoded_content = PropertyMock(side_effect=GithubException(403, {"message": "fail"}))
+
+    with pytest.raises(FilterException, match="Error reading content from org/repo/path: fail") as exc_info:
+        content_filter(mock_content_file)
+
+    assert exc_info.value.filter == content_filter
 
 
 @pytest.mark.parametrize(
