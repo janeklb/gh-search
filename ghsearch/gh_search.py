@@ -7,7 +7,7 @@ from github.ContentFile import ContentFile
 from github.Rate import Rate
 from github.RateLimit import RateLimit
 
-from ghsearch.filters import Filter
+from ghsearch.filters import Filter, FilterException
 from ghsearch.terminal import ProgressPrinter
 
 CORE_CALLS_RELATIVE_LIMIT = 0.1
@@ -65,11 +65,15 @@ class GHSearch:
         with ProgressPrinter(overwrite=not self.verbose) as printer:
             for result in results:
                 printer(f"Checking result for {result.repository.full_name}")
-                exclude_reason = self._should_exclude(result)
-                if not exclude_reason:
-                    repos[result.repository.full_name].append(result)
-                elif self.verbose:
-                    click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
+                try:
+                    exclude_reason = self._should_exclude(result)
+                except FilterException as e:
+                    printer(str(e), force=True)
+                else:
+                    if not exclude_reason:
+                        repos[result.repository.full_name].append(result)
+                    elif self.verbose:
+                        click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
         if self.verbose:
             _echo_rate_limits(self.client.get_rate_limit())
