@@ -25,7 +25,7 @@ Invoke with `gh-search` and pass a query string as the first argument. For examp
 gh-search usage repo:janeklb/gh-search
 ```
 
-_Note that `repo:` is a search qualifier natively supported by the GitHub Search API._
+_Note that `repo:` is a search qualifier natively supported by the GitHub Search API. See GitHub's [searching code](https://docs.github.com/en/github/searching-for-information-on-github/searching-code) documentation to see what other qualifiers are available._
 
 `gh-search` also offers the following options
 
