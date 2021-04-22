@@ -111,7 +111,22 @@ def test_run_repos_with_matches(assert_click_echo_calls):
     assert_click_echo_calls(call("org/repo1"))
 
 
-@pytest.mark.parametrize("repos_with_matches, expected_calls", [(False, [call("No results!")]), (True, [])])
+@pytest.mark.parametrize(
+    "repos_with_matches, expected_calls",
+    [
+        (
+            False,
+            [
+                call("No results!"),
+                call(
+                    "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
+                    "searching-for-information-on-github/searching-code#considerations-for-code-search)"
+                ),
+            ],
+        ),
+        (True, []),
+    ],
+)
 def test_run_no_results(assert_click_echo_calls, mock_github, repos_with_matches, expected_calls):
     mock_github.search_code.return_value = MockPaginatedList()
     run(["query"], "token", repos_with_matches=repos_with_matches)
