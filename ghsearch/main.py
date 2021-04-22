@@ -23,6 +23,10 @@ def _print_repo_names_only(results: Dict[str, List[ContentFile]]) -> None:
 def _print_results(query: List[str], results: Dict[str, List[ContentFile]]) -> None:
     if len(results) == 0:
         click.echo("No results!")
+        click.echo(
+            "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
+            "searching-for-information-on-github/searching-code#considerations-for-code-search)"
+        )
         return
     sorted_results = sorted(results.items(), key=lambda kv: len(kv[1]), reverse=True)
 
