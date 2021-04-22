@@ -4,11 +4,12 @@ GitHub code search from your cli
 
 ## Features
 
-* Uses [GitHub Search API](https://docs.github.com/en/free-pro-team@latest/rest/reference/search#search-code)
-* Apply filters on the GitHub Search API response (eg. ignore archived repos or search for additional text in matched content)
-* View search results grouped by repo
-* Core API rate limit check (prevent accidentally consuming your entire core api quota) 
-* Works with GitHub Enterprise
+* Filters the search results (eg. ignore archived repositories or search for additional text in matched content)
+* View search results grouped by org/repository
+* Checks your core API rate limit (prevent accidentally consuming your entire core api quota)
+* Uses GitHub's [Rest API] (and therefore works with GitHub Enterprise)
+
+[Rest API]: https://docs.github.com/en/rest/reference/search#search-code
 
 ## Installation
 
@@ -16,16 +17,21 @@ GitHub code search from your cli
 pip install gh-search
 ```
 
-## Usage
+## Authentication
 
-**IMPORTANT**: This tool requires that you GitHub token set on the `GITHUB_TOKEN` envvar (or passed to the script via the `--github-token` option).
+A valid GitHub personal access token, with the `repo` scope, is required to retrieve search results.
+It can be set on a `GITHUB_TOKEN` envvar or passed to the script via the `--github-token` option.
+
+## Usage
 
 Invoke with `gh-search` and pass a query string as the first argument. For example, to search for the string "usage" in this repo:
 ```bash
 gh-search usage repo:janeklb/gh-search
 ```
 
-_Note that `repo:` is a search qualifier natively supported by the GitHub Search API. See GitHub's [searching code](https://docs.github.com/en/github/searching-for-information-on-github/searching-code) documentation to see what other qualifiers are available._
+_Note that `repo:` is a search qualifier natively supported by the GitHub Search API. See GitHub's [searching code] documentation to see what other qualifiers are available._
+
+[searching code]: https://docs.github.com/en/github/searching-for-information-on-github/searching-code
 
 `gh-search` also offers the following options
 
@@ -37,7 +43,7 @@ _Note that `repo:` is a search qualifier natively supported by the GitHub Search
 
 ### Enterprise
 
-If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envvar with a URL to the v3 api endpoint. eg. `GITHUB_API_URL=https://git.mycompany.net/api/v3`. You can also use the `--github-api-url` option for this.
+If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envvar with a URL to the v3 api endpoint. eg. `GITHUB_API_URL=https://github.mycompany.net/api/v3`. You can also use the `--github-api-url` option for this.
 
 ## Developing
 
