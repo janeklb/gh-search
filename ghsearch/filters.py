@@ -1,3 +1,5 @@
+import re
+
 from github.ContentFile import ContentFile
 from github.GithubException import GithubException
 
@@ -19,11 +21,16 @@ class Filter:
 
 class ContentFilter(Filter):
     def __init__(self, content_filter: str):
-        self.content_filter = content_filter
+        try:
+            self.content_filter_pattern = re.compile(content_filter)
+        except re.error as e:
+            message = f"Failed to compile regular expression from '{content_filter}': {e}"
+            raise FilterException(self, message) from e
 
     def __call__(self, result: ContentFile) -> bool:
         try:
-            return self.content_filter in result.decoded_content.decode("utf-8")
+            content = result.decoded_content.decode("utf-8")
+            return bool(self.content_filter_pattern.search(content))
         except GithubException as e:
             message = f"Error reading content from {result.repository.full_name}/{result.path}: {e.data['message']}"
             raise FilterException(self, message) from e
