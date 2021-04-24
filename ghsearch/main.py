@@ -7,7 +7,7 @@ from github.ContentFile import ContentFile
 from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
-from ghsearch.filters import ContentFilter, Filter, NotArchivedFilter, PathFilter
+from ghsearch.filters import ContentFilter, Filter, FilterException, NotArchivedFilter, PathFilter
 from ghsearch.gh_search import GHSearch
 
 
@@ -64,8 +64,13 @@ def run(
     verbose: bool = False,
 ) -> None:
     client = build_client(github_token, github_api_url)
+
     try:
         filters = _build_filters(path_filter, include_archived, content_filter)
+    except FilterException as ex:
+        raise UsageError(str(ex), click.get_current_context(silent=True))
+
+    try:
         gh_search = GHSearch(client, filters, verbose)
         results = gh_search.get_filtered_results(query)
 

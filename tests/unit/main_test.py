@@ -97,6 +97,14 @@ def test_run_content_filter(assert_click_echo_calls):
     )
 
 
+def test_run_content_filter_bad_regex():
+    with pytest.raises(
+        click.UsageError,
+        match="Failed to compile regular expression from '\\[': unterminated character set at position 0",
+    ):
+        run(["query"], "token", content_filter="[")
+
+
 def test_run_path_filter(assert_click_echo_calls):
     run(["query"], "token", path_filter="file.txt")
     assert_click_echo_calls(
