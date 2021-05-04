@@ -37,7 +37,8 @@ _Note that `repo:` is a search qualifier natively supported by the GitHub Search
 
 - `-a`/`--include-archived`: include results from archived repos (default behaviour is to exclude results from archived repositories).
 - `-p TEXT`/`--path-filter TEXT`: similar to the `path:` search qualifier, but a bit more flexible as it does a string match on the path (rather than relying on GitHub's indexed path components). For example `-p cat` will show matches against a file called `mycat.json` whereas `path:cat` will not.
-- `-c TEXT`/`--content-filter TEXT`: include results with content that yields a match against a regular expression (`TEXT`). A lot more flexible than specifying an additional search term in the search query, which relies on how GitHub has indexed a file for searching.
+- `-c TEXT`/`--content-filter TEXT`: include results with content that matches against a string (`TEXT`). A lot more flexible than specifying an additional search term in the search query, which relies on how GitHub has indexed a file for searching.
+- `-e TEXT`/`--regex-content-filter TEXT`: Just like `--content-filter` but matches against a regular expression (`TEXT`).
 - `-l` / `--repos-with-matches`: only prints the names of the repos with matching results
 - `-v` / `--verbose`: verbose output, print information about the repos being scanned and ignored via filters
 

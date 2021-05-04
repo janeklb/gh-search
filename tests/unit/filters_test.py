@@ -3,7 +3,7 @@ from unittest.mock import PropertyMock
 import pytest
 from github.GithubException import GithubException
 
-from ghsearch.filters import ContentFilter, FilterException, NotArchivedFilter, PathFilter
+from ghsearch.filters import ContentFilter, FilterException, NotArchivedFilter, PathFilter, RegexContentFilter
 
 from . import build_mock_content_file
 
@@ -30,8 +30,6 @@ def test_build_path_filter(path_matcher, path, expected_result):
     [
         ("this str", b"I'm looking for this string.", True),
         ("another str", b"I'm still looking for this str", False),
-        ("regex\\s{1}test", b"I'm looking for a regex test str", True),
-        ("regex\\s{2}test", b"I'm looking for a regex test str", False),
     ],
 )
 def test_build_content_filter(content_matcher, content_bytes, expected_result):
@@ -42,12 +40,27 @@ def test_build_content_filter(content_matcher, content_bytes, expected_result):
     assert content_filter.uses_core_api is True
 
 
-def test_build_content_filter_invalid_regex():
+@pytest.mark.parametrize(
+    "content_matcher, content_bytes, expected_result",
+    [
+        ("regex\\s{1}test", b"I'm looking for a regex test str", True),
+        ("regex\\s{2}test", b"I'm looking for a regex test str", False),
+    ],
+)
+def test_build_regex_content_filter(content_matcher, content_bytes, expected_result):
+    content_filter = RegexContentFilter(content_matcher)
+    mock_content_file = build_mock_content_file(decoded_content=content_bytes)
+
+    assert content_filter(mock_content_file) is expected_result
+    assert content_filter.uses_core_api is True
+
+
+def test_build_regex_content_filter_invalid_regex():
     with pytest.raises(
         FilterException,
         match="Failed to compile regular expression from '\\[invalid regex': unterminated character set at position 0",
     ):
-        ContentFilter("[invalid regex")
+        RegexContentFilter("[invalid regex")
 
 
 def test_content_filter_with_github_exception():

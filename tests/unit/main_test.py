@@ -97,12 +97,21 @@ def test_run_content_filter(assert_click_echo_calls):
     )
 
 
-def test_run_content_filter_bad_regex():
+def test_run_regex_content_filter(assert_click_echo_calls):
+    run(["query"], "token", regex_content_filter="special\\scontent")
+    assert_click_echo_calls(
+        call("Results:"),
+        call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
+        call("\t- README.md"),
+    )
+
+
+def test_run_regex_content_filter_bad_regex():
     with pytest.raises(
         click.UsageError,
         match="Failed to compile regular expression from '\\[': unterminated character set at position 0",
     ):
-        run(["query"], "token", content_filter="[")
+        run(["query"], "token", regex_content_filter="[")
 
 
 def test_run_path_filter(assert_click_echo_calls):
