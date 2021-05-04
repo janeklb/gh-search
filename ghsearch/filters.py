@@ -19,7 +19,28 @@ class Filter:
         raise NotImplementedError
 
 
-class ContentFilter(Filter):
+class DecodedContentFilter(Filter):
+    def __call__(self, result: ContentFile) -> bool:
+        try:
+            content = result.decoded_content.decode("utf-8")
+            return self.matches_content(content)
+        except GithubException as e:
+            message = f"Error reading content from {result.repository.full_name}/{result.path}: {e.data['message']}"
+            raise FilterException(self, message) from e
+
+    def matches_content(self, content: str) -> bool:
+        raise NotImplementedError
+
+
+class ContentFilter(DecodedContentFilter):
+    def __init__(self, content_filter: str):
+        self.content_filter = content_filter
+
+    def matches_content(self, content: str) -> bool:
+        return self.content_filter in content
+
+
+class RegexContentFilter(DecodedContentFilter):
     def __init__(self, content_filter: str):
         try:
             self.content_filter_pattern = re.compile(content_filter)
@@ -27,13 +48,8 @@ class ContentFilter(Filter):
             message = f"Failed to compile regular expression from '{content_filter}': {e}"
             raise FilterException(self, message) from e
 
-    def __call__(self, result: ContentFile) -> bool:
-        try:
-            content = result.decoded_content.decode("utf-8")
-            return bool(self.content_filter_pattern.search(content))
-        except GithubException as e:
-            message = f"Error reading content from {result.repository.full_name}/{result.path}: {e.data['message']}"
-            raise FilterException(self, message) from e
+    def matches_content(self, content: str) -> bool:
+        return bool(self.content_filter_pattern.search(content))
 
 
 class NotArchivedFilter(Filter):

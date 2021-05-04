@@ -31,6 +31,7 @@ def _create_none_value_validator(message):
 )
 @click.option("-p", "--path-filter", help="Exclude results whose path (or part of path) does not match this.")
 @click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
+@click.option("-e", "--regex-content-filter", help="Exclude results whose content does not match this regex.")
 @click.option("-a", "--include-archived", help="Include results from archived repos.", default=False, is_flag=True)
 @click.option("-l", "--repos-with-matches", help="Only the names of repos are printed.", default=False, is_flag=True)
 @click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
