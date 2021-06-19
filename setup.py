@@ -22,13 +22,13 @@ install_requires = [
 
 dev_requires = [
     "black~=20.8b1",
+    "coverage~=4.4.1",
     "flake8~=3.7.7",
     "isort~=5.6.4",
     "mypy~=0.761",
-    "pytest~=4.4.2",
-    "pytest-mock~=1.10.4",
-    "coverage~=4.4.1",
     "pip-tools~=5.3.1",
+    "pytest-mock~=1.10.4",
+    "pytest~=4.4.2",
 ]
 
 
