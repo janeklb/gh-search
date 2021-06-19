@@ -25,10 +25,11 @@ dev_requires = [
     "coverage~=4.4.1",
     "flake8~=3.7.7",
     "isort~=5.6.4",
-    "mypy~=0.761",
+    "mypy~=0.902",
     "pip-tools~=5.3.1",
     "pytest-mock~=1.10.4",
     "pytest~=4.4.2",
+    "types-click~=7.1.2",
 ]
 
 
