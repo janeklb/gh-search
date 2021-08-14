@@ -21,7 +21,7 @@ def test_build_client_passes_expected_parameters(mock_github):
     mock_github.assert_called_once_with(
         login_or_token="foo-token",
         base_url="https://github.example.org/api/v3",
-        per_page=1000,
+        per_page=100,
     )
 
 
@@ -30,5 +30,5 @@ def test_build_client_passes_expected_parameters_defaults_github(mock_github):
 
     mock_github.assert_called_once_with(
         login_or_token="foo-token",
-        per_page=1000,
+        per_page=100,
     )

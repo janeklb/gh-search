@@ -4,7 +4,7 @@ from ghsearch.main import run
 
 
 def _create_none_value_validator(message):
-    def _validator(ctx, param, value):
+    def _validator(ctx, _, value):
         if value is None:
             raise click.UsageError(message, ctx=ctx)
         return value
