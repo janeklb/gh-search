@@ -1,6 +1,6 @@
 # gh-search
 
-GitHub code search from your cli
+GitHub code search with full text regex filtering, from your cli.
 
 ## Features
 
@@ -45,6 +45,15 @@ _Note that `repo:` is a search qualifier natively supported by the GitHub Search
 ### Enterprise
 
 If you want to search against GitHub Enterprise set the `GITHUB_API_URL` envvar with a URL to the v3 api endpoint. eg. `GITHUB_API_URL=https://github.mycompany.net/api/v3`. You can also use the `--github-api-url` option for this.
+
+### Rate Limiting
+
+`gh-search` checks your [rate limits](https://docs.github.com/en/rest/reference/rate-limit) and will prompt you to continue if your search might:
+
+- perform more than `500` core API requests
+- leave you with less than `10%` of your core API quota
+
+Only the **core** API quota is checked because `gh-search`'s filters can make heavy use it. The **search** API quota is _not_ checked.
 
 ## Developing
 
