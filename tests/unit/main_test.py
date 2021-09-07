@@ -5,6 +5,7 @@ import pytest
 from github import BadCredentialsException, Github, GithubException
 
 from ghsearch.main import run
+from ghsearch.output import Printer
 
 from . import MockPaginatedList, MockRateLimit, build_mock_content_file
 
@@ -16,12 +17,29 @@ def mock_progress_printer():
 
 
 @pytest.fixture
-def mock_github():
+def mock_content_file_repo1_readme():
+    return build_mock_content_file("org/repo1", "README.md", decoded_content=b"special content")
+
+
+@pytest.fixture
+def mock_content_file_repo1_file():
+    return build_mock_content_file("org/repo1", "file.txt")
+
+
+@pytest.fixture
+def mock_content_file_repo2_src_other_archived():
+    return build_mock_content_file("org/repo2", "src/other.py", archived=True)
+
+
+@pytest.fixture
+def mock_github(
+    mock_content_file_repo1_readme, mock_content_file_repo1_file, mock_content_file_repo2_src_other_archived
+):
     mock = Mock(spec=Github)
     mock.search_code.return_value = MockPaginatedList(
-        build_mock_content_file("org/repo1", "README.md", decoded_content=b"special content"),
-        build_mock_content_file("org/repo1", "file.txt"),
-        build_mock_content_file("org/repo2", "src/other.py", archived=True),
+        mock_content_file_repo1_readme,
+        mock_content_file_repo1_file,
+        mock_content_file_repo2_src_other_archived,
     )
     mock.get_rate_limit.side_effect = [
         MockRateLimit(45, 50, "soon", 10, 10, "soon"),
@@ -37,130 +55,101 @@ def mock_build_client(mock_github):
         yield mock
 
 
-def test_run(assert_click_echo_calls):
-    run(["query"], "token")
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- README.md"),
-        call("\t- file.txt"),
+@pytest.fixture()
+def mock_printer():
+    return Mock(spec=Printer)
+
+
+def test_run_exclude_archived_by_default(
+    assert_click_echo_calls, mock_printer, mock_content_file_repo1_readme, mock_content_file_repo1_file
+):
+    run(["query"], "token", mock_printer)
+    mock_printer.print.assert_called_once_with(
+        ["query"],
+        [
+            mock_content_file_repo1_readme,
+            mock_content_file_repo1_file,
+        ],
     )
 
 
-def test_run_with_qualifiers(assert_click_echo_calls):
-    run(["query", "org:foo", "filename:bar"], "token")
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query%20filename%3Abar"),
-        call("\t- README.md"),
-        call("\t- file.txt"),
-    )
-
-
-def test_run_bad_credentials(assert_click_echo_calls, mock_github):
+def test_run_bad_credentials(assert_click_echo_calls, mock_github, mock_printer):
     mock_github.search_code.side_effect = BadCredentialsException(404, "No!")
     with pytest.raises(click.UsageError, match='Bad Credentials: 404 "No!"'):
-        run(["query"], "bad-credentials")
+        run(["query"], "bad-credentials", mock_printer)
 
 
-def test_run_verbose(assert_click_echo_calls):
-    run(["query"], "token", verbose=True)
+def test_run_verbose(assert_click_echo_calls, mock_printer):
+    run(["query"], "token", mock_printer, verbose=True)
     assert_click_echo_calls(
         call("Core rate limit: 45/50 (resets soon), Search rate limit: 10/10 (resets soon)"),
         call("Skipping result for org/repo2 via NotArchivedFilter"),
         call("Core rate limit: 43/50 (resets even sooner), Search rate limit: 9/10 (resets even sooner)"),
-        call("Results:"),
-        call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- README.md"),
-        call("\t- file.txt"),
     )
 
 
-def test_run_include_archived(assert_click_echo_calls):
-    run(["query"], "token", include_archived=True)
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- README.md"),
-        call("\t- file.txt"),
-        call(" 1 - org/repo2: https://www.github.com/org/repo2/search?utf8=✓&q=query"),
-        call("\t- src/other.py"),
+def test_run_include_archived(
+    assert_click_echo_calls,
+    mock_printer,
+    mock_content_file_repo1_readme,
+    mock_content_file_repo1_file,
+    mock_content_file_repo2_src_other_archived,
+):
+    run(["query"], "token", mock_printer, include_archived=True)
+    mock_printer.print.assert_called_once_with(
+        ["query"],
+        [
+            mock_content_file_repo1_readme,
+            mock_content_file_repo1_file,
+            mock_content_file_repo2_src_other_archived,
+        ],
     )
 
 
-def test_run_content_filter(assert_click_echo_calls):
-    run(["query"], "token", content_filter="special content")
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- README.md"),
+def test_run_content_filter(assert_click_echo_calls, mock_printer, mock_content_file_repo1_readme):
+    run(["query"], "token", mock_printer, content_filter="special content")
+    mock_printer.print.assert_called_once_with(
+        ["query"],
+        [
+            mock_content_file_repo1_readme,
+        ],
     )
 
 
-def test_run_regex_content_filter(assert_click_echo_calls):
-    run(["query"], "token", regex_content_filter="special\\scontent")
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- README.md"),
+def test_run_regex_content_filter(assert_click_echo_calls, mock_printer, mock_content_file_repo1_readme):
+    run(["query"], "token", mock_printer, regex_content_filter="special\\scontent")
+    mock_printer.print.assert_called_once_with(
+        ["query"],
+        [
+            mock_content_file_repo1_readme,
+        ],
     )
 
 
-def test_run_regex_content_filter_bad_regex():
+def test_run_regex_content_filter_bad_regex(mock_printer):
     with pytest.raises(
         click.UsageError,
         match="Failed to compile regular expression from '\\[': unterminated character set at position 0",
     ):
-        run(["query"], "token", regex_content_filter="[")
+        run(["query"], "token", mock_printer, regex_content_filter="[")
 
 
-def test_run_path_filter(assert_click_echo_calls):
-    run(["query"], "token", path_filter="file.txt")
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 1 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-        call("\t- file.txt"),
-    )
+def test_run_path_filter(assert_click_echo_calls, mock_printer, mock_content_file_repo1_file):
+    run(["query"], "token", mock_printer, path_filter="file.txt")
+    mock_printer.print.assert_called_once_with(["query"], [mock_content_file_repo1_file])
 
 
-def test_run_repos_with_matches(assert_click_echo_calls):
-    run(["query"], "token", repos_with_matches=True)
-    assert_click_echo_calls(call("org/repo1"))
-
-
-@pytest.mark.parametrize(
-    "repos_with_matches, expected_calls",
-    [
-        (
-            False,
-            [
-                call("No results!"),
-                call(
-                    "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
-                    "searching-for-information-on-github/searching-code#considerations-for-code-search)"
-                ),
-            ],
-        ),
-        (True, []),
-    ],
-)
-def test_run_no_results(assert_click_echo_calls, mock_github, repos_with_matches, expected_calls):
-    mock_github.search_code.return_value = MockPaginatedList()
-    run(["query"], "token", repos_with_matches=repos_with_matches)
-    assert_click_echo_calls(*expected_calls)
-
-
-def test_run_when_raises_github_exception_422(mock_github):
+def test_run_when_raises_github_exception_422(mock_github, mock_printer):
     mock_github.search_code.side_effect = GithubException(
         422, {"message": "Fail!", "errors": [{"message": "reason1"}, {"message": "reason2"}]}
     )
 
     with pytest.raises(click.UsageError, match="Fail! \\(GitHub Exception\\): reason1, reason2"):
-        run(["query"], "token")
+        run(["query"], "token", mock_printer)
 
 
-def test_run_when_raises_github_exception(mock_github):
+def test_run_when_raises_github_exception(mock_github, mock_printer):
     mock_github.search_code.side_effect = GithubException(400, "")
 
     with pytest.raises(GithubException):
-        run(["query"], "token")
+        run(["query"], "token", mock_printer)
