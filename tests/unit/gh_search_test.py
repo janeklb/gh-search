@@ -55,14 +55,14 @@ def test_get_filtered_results_without_filters(mock_client, mock_result_1, mock_r
     ghsearch = GHSearch(mock_client, [])
     repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
-    assert repos == {"org/repo1": [mock_result_1, mock_result_2], "org/repo2": [mock_result_3]}
+    assert repos == [mock_result_1, mock_result_2, mock_result_3]
 
 
 def test_get_filtered_results_with_filters(mock_client, mock_result_1, mock_result_2, mock_result_3):
     ghsearch = GHSearch(mock_client, [Mock(side_effect=[True, False, True])])
     repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
-    assert repos == {"org/repo1": [mock_result_1], "org/repo2": [mock_result_3]}
+    assert repos == [mock_result_1, mock_result_3]
 
 
 def test_get_filtered_results_with_exception_when_filtering(mock_client, mock_result_1, mock_progress_printer):
@@ -83,7 +83,7 @@ def test_get_filtered_results_verbose(mock_client, mock_result_1, mock_result_2,
 
     repos = ghsearch.get_filtered_results(["query", "org:bort"])
 
-    assert repos == {"org/repo1": [mock_result_2]}
+    assert repos == [mock_result_2]
     mock_click.echo.assert_any_call("Skipping result for org/repo1 via Mock")
     mock_click.echo.assert_any_call("Skipping result for org/repo2 via Mock")
 

@@ -1,6 +1,15 @@
 import click
 
 from ghsearch.main import run
+from ghsearch.output import Printer, printer_factory, printers_list
+
+
+def _printer(ctx: click.Context, param: click.Parameter, value: str) -> Printer:
+    try:
+        force_repo_printer = bool(ctx.params.get("repos_with_matches"))
+        return printer_factory(value, force_repo_printer)
+    except KeyError:
+        raise click.BadParameter(f"Must be one of: {', '.join(printers_list())}", ctx=ctx, param=param)
 
 
 def _create_none_value_validator(message):
@@ -33,10 +42,38 @@ def _create_none_value_validator(message):
 @click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
 @click.option("-e", "--regex-content-filter", help="Exclude results whose content does not match this regex.")
 @click.option("-a", "--include-archived", help="Include results from archived repos.", default=False, is_flag=True)
-@click.option("-l", "--repos-with-matches", help="Only the names of repos are printed.", default=False, is_flag=True)
+@click.option(
+    "-l",
+    "--repos-with-matches",
+    help="Only the names of repos are printed. Equivalent to --output=repo-list",
+    default=False,
+    is_flag=True,
+)
+@click.option("-o", "--output", help=f"Output style (one of {printers_list()})", callback=_printer, default="default")
 @click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
-def cli(*args, **kwargs):
-    run(*args, **kwargs)
+def cli(
+    query,
+    output,
+    include_archived,
+    verbose,
+    github_token,
+    github_api_url=None,
+    path_filter=None,
+    context_filter=None,
+    regex_context_filter=None,
+    **_,
+):
+    run(
+        query=query,
+        github_token=github_token,
+        printer=output,
+        github_api_url=github_api_url,
+        path_filter=path_filter,
+        content_filter=context_filter,
+        regex_content_filter=regex_context_filter,
+        include_archived=include_archived,
+        verbose=verbose,
+    )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Dict, List
+from typing import List
 
 import click
 import github
@@ -53,7 +52,7 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
-    def get_filtered_results(self, query: List[str]) -> Dict[str, List[ContentFile]]:
+    def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
         rate_limit = self.client.get_rate_limit()
         if self.verbose:
             _echo_rate_limits(rate_limit)
@@ -61,7 +60,7 @@ class GHSearch:
         results = self.client.search_code(query=" ".join(query))
         self._check_core_limit_threshold(results.totalCount, rate_limit.core)
 
-        repos = defaultdict(list)
+        filtered_results = []
         with ProgressPrinter(overwrite=not self.verbose) as printer:
             for result in results:
                 printer(f"Checking result for {result.repository.full_name}")
@@ -71,14 +70,14 @@ class GHSearch:
                     printer(str(e), force=True)
                 else:
                     if not exclude_reason:
-                        repos[result.repository.full_name].append(result)
+                        filtered_results.append(result)
                     elif self.verbose:
                         click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
         if self.verbose:
             _echo_rate_limits(self.client.get_rate_limit())
 
-        return repos
+        return filtered_results
 
     def _should_exclude(self, result):
         for result_filter in self.filters:
