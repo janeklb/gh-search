@@ -18,6 +18,7 @@ def get_readme():
 install_requires = [
     "click~=7.1.2",
     "PyGithub~=1.54.1",
+    "ruamel.yaml~=0.17.16",
 ]
 
 dev_requires = [

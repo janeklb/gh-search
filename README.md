@@ -67,7 +67,7 @@ Options:
                                   Exclude results whose content does not match this regex.
   -a, --include-archived          Include results from archived repos.
   -l, --repos-with-matches        Only the names of repos are printed. Equivalent to --output=repo-list
-  -o, --output TEXT               Output style (one of ['default', 'repo-list'])
+  -o, --output TEXT               Output style; one of: default, repo-list, json, yaml
   -v, --verbose                   Verbose output.
   --help                          Show this message and exit.
 ```

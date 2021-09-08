@@ -49,7 +49,9 @@ def _create_none_value_validator(message):
     default=False,
     is_flag=True,
 )
-@click.option("-o", "--output", help=f"Output style (one of {printers_list()})", callback=_printer, default="default")
+@click.option(
+    "-o", "--output", help=f"Output style; one of: {', '.join(printers_list())}", callback=_printer, default="default"
+)
 @click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
 def cli(
     query,
