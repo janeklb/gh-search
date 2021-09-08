@@ -23,9 +23,15 @@ def build_mock_content_file(
     repo_full_name: str = "org/repo", path: str = "path", archived: bool = False, decoded_content: bytes = b""
 ):
     mock = Mock(spec=ContentFile)
+    mock.repository.name = repo_full_name.split("/")[1]
+    mock.repository.owner.login = repo_full_name.split("/")[0]
     mock.repository.full_name = repo_full_name
     mock.repository.archived = archived
     mock.repository.html_url = f"https://www.github.com/{repo_full_name}"
+    mock.repository.fork = False
     mock.path = path
     mock.decoded_content = decoded_content
+    mock.name = path.split("/").pop()
+    mock.size = 1000
+    mock.html_url = f"https://www.github.com/{repo_full_name}/blob/master/{path}"
     return mock
