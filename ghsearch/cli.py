@@ -65,8 +65,6 @@ def cli(
     regex_content_filter=None,
     **_,
 ):
-    print(f"query: {query}")
-    print(f"")
     run(
         query=query,
         github_token=github_token,
