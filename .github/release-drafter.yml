@@ -3,6 +3,6 @@ template: |
 
   - ...
 
-  ### PRs merged in this release
+  ### Changes since last release
 
   $CHANGES

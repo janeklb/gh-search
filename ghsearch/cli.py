@@ -61,18 +61,20 @@ def cli(
     github_token,
     github_api_url=None,
     path_filter=None,
-    context_filter=None,
-    regex_context_filter=None,
+    content_filter=None,
+    regex_content_filter=None,
     **_,
 ):
+    print(f"query: {query}")
+    print(f"")
     run(
         query=query,
         github_token=github_token,
         printer=output,
         github_api_url=github_api_url,
         path_filter=path_filter,
-        content_filter=context_filter,
-        regex_content_filter=regex_context_filter,
+        content_filter=content_filter,
+        regex_content_filter=regex_content_filter,
         include_archived=include_archived,
         verbose=verbose,
     )
