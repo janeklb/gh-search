@@ -49,6 +49,7 @@ setup(
     install_requires=install_requires,
     setup_requires=["pytest-runner"],
     tests_require=dev_requires,
+    python_requires=">=3.7",
     extras_require={
         "dev": dev_requires,
     },
