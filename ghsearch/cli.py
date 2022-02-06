@@ -1,4 +1,7 @@
+import os
+
 import click
+import click_config_file
 
 from ghsearch.main import run
 from ghsearch.output import Printer, printer_factory, printers_list
@@ -19,6 +22,10 @@ def _create_none_value_validator(message):
         return value
 
     return _validator
+
+
+_cmd_name = "gh-search"
+_config_file = os.path.join(click.get_app_dir(_cmd_name), "config")
 
 
 @click.command(
@@ -53,11 +60,15 @@ def _create_none_value_validator(message):
     "-o", "--output", help=f"Output style; one of: {', '.join(printers_list())}", callback=_printer, default="default"
 )
 @click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
+@click_config_file.configuration_option(
+    cmd_name="gh-search", help=f"Config file (default: {_config_file})", expose_value=True
+)
 def cli(
     query,
     output,
     include_archived,
     verbose,
+    config,
     github_token,
     github_api_url=None,
     path_filter=None,
@@ -65,6 +76,8 @@ def cli(
     regex_content_filter=None,
     **_,
 ):
+    if verbose:
+        click.echo(f"Reading defaults from {config}")
     run(
         query=query,
         github_token=github_token,
