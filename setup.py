@@ -39,7 +39,6 @@ setup(
     version=get_version(),
     url="https://github.com/janeklb/gh-search",
     author="Janek Lasocki-Biczysko",
-    author_email="janek.lb@gmail.net",
     description="Github search from the cli",
     long_description=get_readme(),
     long_description_content_type="text/markdown",
