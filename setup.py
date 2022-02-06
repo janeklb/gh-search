@@ -16,20 +16,20 @@ def get_readme():
 
 
 install_requires = [
-    "click~=7.1.2",
+    "click~=8.0.3",
     "PyGithub~=1.54.1",
     "ruamel.yaml~=0.17.16",
 ]
 
 dev_requires = [
-    "black~=20.8b1",
-    "coverage~=4.4.1",
+    "black~=22.1.0",
+    "coverage~=6.3.1",
     "flake8~=3.7.7",
-    "isort~=5.6.4",
-    "mypy~=0.902",
+    "isort~=5.10.1",
+    "mypy~=0.931",
     "pip-tools~=5.3.1",
-    "pytest-mock~=1.10.4",
-    "pytest~=4.4.2",
+    "pytest-mock~=3.7.0",
+    "pytest~=6.2.5",
     "types-click~=7.1.2",
 ]
 
