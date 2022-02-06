@@ -13,7 +13,7 @@ GitHub code search with full text regex filtering, from your cli.
 
 ## Installation
 
-`gh-search` is available as a python package via [pypi.org](https://pypi.org/project/gh-search/) and requires Python 3.6+
+`gh-search` is available as a python package via [pypi.org](https://pypi.org/project/gh-search/) and requires Python 3.7+
 
 ```bash
 pip install gh-search
