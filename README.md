@@ -2,7 +2,7 @@
 
 [![Last release](https://img.shields.io/pypi/v/gh-search.svg)](https://pypi.python.org/pypi/gh-search)
 [![Python versions](https://img.shields.io/pypi/pyversions/gh-search.svg)](https://pypi.python.org/pypi/gh-search)
-[![Unittests status](https://github.com/janeklb/gh-search/actions/workflows/lint-and-test.yaml/badge.svg?branch=main)](https://github.com/janeklb/gh-search/actions/workflows/tests.yaml?query=branch%3Amain)
+[![Unittests status](https://github.com/janeklb/gh-search/actions/workflows/lint-and-test.yml/badge.svg?branch=main)](https://github.com/janeklb/gh-search/actions/workflows/lint-and-test.yml?query=branch%3Amain)
 
 GitHub code search with full text regex filtering, from your cli.
 
