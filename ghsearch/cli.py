@@ -10,7 +10,7 @@ from ghsearch.output import Printer, printer_factory, printers_list
 def _printer(ctx: click.Context, param: click.Parameter, value: str) -> Printer:
     try:
         force_repo_printer = bool(ctx.params.get("repos_with_matches"))
-        return printer_factory(value, force_repo_printer)
+        return printer_factory(value, click.get_text_stream("stdout"), force_repo_printer)
     except KeyError:
         raise click.BadParameter(f"Must be one of: {', '.join(printers_list())}", ctx=ctx, param=param)
 
