@@ -1,4 +1,4 @@
-from unittest.mock import call
+from io import StringIO
 
 import pytest
 
@@ -8,43 +8,39 @@ from . import build_mock_content_file
 
 
 @pytest.mark.parametrize(
-    "printer_cls, expected_calls",
+    "printer_cls, expected",
     [
         (
             DefaultPrinter,
-            [
-                call("No results!"),
-                call(
-                    "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
-                    "searching-for-information-on-github/searching-code#considerations-for-code-search)"
-                ),
-            ],
+            "No results!\n"
+            "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
+            "searching-for-information-on-github/searching-code#considerations-for-code-search)\n",
         ),
-        (RepoListPrinter, []),
+        (RepoListPrinter, ""),
     ],
 )
-def test_print_no_results(printer_cls, expected_calls, assert_click_echo_calls):
-    printer_cls().print(["query"], {})
-    assert_click_echo_calls(*expected_calls)
+def test_print_no_results(printer_cls, expected):
+    stream = StringIO()
+    printer_cls(stream).print(["query"], {})
+    assert stream.getvalue() == expected
 
 
 @pytest.mark.parametrize(
-    "printer_cls, expected_calls",
+    "printer_cls, expected",
     [
         (
             DefaultPrinter,
-            [
-                call("Results:"),
-                call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-                call("\t- README.md"),
-                call("\t- file.txt"),
-            ],
+            "Results:\n"
+            " 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query\n"
+            "\t- README.md\n"
+            "\t- file.txt\n",
         ),
-        (RepoListPrinter, [call("org/repo1")]),
+        (RepoListPrinter, "org/repo1\n"),
     ],
 )
-def test_print_results_slingle_repo(printer_cls, expected_calls, assert_click_echo_calls):
-    printer_cls().print(
+def test_print_results_slingle_repo(printer_cls, expected):
+    stream = StringIO()
+    printer_cls(stream).print(
         ["query"],
         [
             build_mock_content_file("org/repo1", "README.md"),
@@ -52,68 +48,58 @@ def test_print_results_slingle_repo(printer_cls, expected_calls, assert_click_ec
         ],
     )
 
-    assert_click_echo_calls(*expected_calls)
+    assert stream.getvalue() == expected
 
 
 @pytest.mark.parametrize(
-    "printer_cls, expected_calls",
+    "printer_cls, expected",
     [
         (
             DefaultPrinter,
-            [
-                call("Results:"),
-                call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query"),
-                call("\t- README.md"),
-                call("\t- file.txt"),
-                call(" 1 - org/repo2: https://www.github.com/org/repo2/search?utf8=✓&q=query"),
-                call("\t- file-2.json"),
-            ],
+            "Results:\n"
+            " 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query\n"
+            "\t- README.md\n"
+            "\t- file.txt\n"
+            " 1 - org/repo2: https://www.github.com/org/repo2/search?utf8=✓&q=query\n"
+            "\t- file-2.json\n",
         ),
-        (RepoListPrinter, [call("org/repo1"), call("org/repo2")]),
+        (RepoListPrinter, "org/repo1\norg/repo2\n"),
         (
             JsonPrinter,
-            [
-                call(
-                    '[{"full_name": "org/repo1", "html_url": "https://www.github.com/org/repo1", "fork": false, "owner": "org", "name": "repo1", "results": [{"path": "README.md", "name": "README.md", "size": 1000, "html_url": "https://www.github.com/org/repo1/blob/master/README.md"}, {"path": "file.txt", "name": "file.txt", "size": 1000, "html_url": "https://www.github.com/org/repo1/blob/master/file.txt"}]}, {"full_name": "org/repo2", "html_url": "https://www.github.com/org/repo2", "fork": false, "owner": "org", "name": "repo2", "results": [{"path": "file-2.json", "name": "file-2.json", "size": 1000, "html_url": "https://www.github.com/org/repo2/blob/master/file-2.json"}]}]'  # noqa: E501
-                )
-            ],
+            '[{"full_name": "org/repo1", "html_url": "https://www.github.com/org/repo1", "fork": false, "owner": "org", "name": "repo1", "results": [{"path": "README.md", "name": "README.md", "size": 1000, "html_url": "https://www.github.com/org/repo1/blob/master/README.md"}, {"path": "file.txt", "name": "file.txt", "size": 1000, "html_url": "https://www.github.com/org/repo1/blob/master/file.txt"}]}, {"full_name": "org/repo2", "html_url": "https://www.github.com/org/repo2", "fork": false, "owner": "org", "name": "repo2", "results": [{"path": "file-2.json", "name": "file-2.json", "size": 1000, "html_url": "https://www.github.com/org/repo2/blob/master/file-2.json"}]}]',  # noqa: E501
         ),
         (
             YamlPrinter,
-            [
-                call(
-                    "- fork: false\n"
-                    "  full_name: org/repo1\n"
-                    "  html_url: https://www.github.com/org/repo1\n"
-                    "  name: repo1\n"
-                    "  owner: org\n"
-                    "  results:\n"
-                    "  - html_url: https://www.github.com/org/repo1/blob/master/README.md\n"
-                    "    name: README.md\n"
-                    "    path: README.md\n"
-                    "    size: 1000\n"
-                    "  - html_url: https://www.github.com/org/repo1/blob/master/file.txt\n"
-                    "    name: file.txt\n"
-                    "    path: file.txt\n"
-                    "    size: 1000\n"
-                    "- fork: false\n"
-                    "  full_name: org/repo2\n"
-                    "  html_url: https://www.github.com/org/repo2\n"
-                    "  name: repo2\n"
-                    "  owner: org\n"
-                    "  results:\n"
-                    "  - html_url: https://www.github.com/org/repo2/blob/master/file-2.json\n"
-                    "    name: file-2.json\n"
-                    "    path: file-2.json\n"
-                    "    size: 1000\n"
-                    ""
-                )
-            ],
+            "- fork: false\n"
+            "  full_name: org/repo1\n"
+            "  html_url: https://www.github.com/org/repo1\n"
+            "  name: repo1\n"
+            "  owner: org\n"
+            "  results:\n"
+            "  - html_url: https://www.github.com/org/repo1/blob/master/README.md\n"
+            "    name: README.md\n"
+            "    path: README.md\n"
+            "    size: 1000\n"
+            "  - html_url: https://www.github.com/org/repo1/blob/master/file.txt\n"
+            "    name: file.txt\n"
+            "    path: file.txt\n"
+            "    size: 1000\n"
+            "- fork: false\n"
+            "  full_name: org/repo2\n"
+            "  html_url: https://www.github.com/org/repo2\n"
+            "  name: repo2\n"
+            "  owner: org\n"
+            "  results:\n"
+            "  - html_url: https://www.github.com/org/repo2/blob/master/file-2.json\n"
+            "    name: file-2.json\n"
+            "    path: file-2.json\n"
+            "    size: 1000\n",
         ),
     ],
 )
-def test_print_results_multiple_repos(printer_cls, expected_calls, assert_click_echo_calls):
-    printer_cls().print(
+def test_print_results_multiple_repos(printer_cls, expected):
+    stream = StringIO()
+    printer_cls(stream).print(
         ["query"],
         [
             build_mock_content_file("org/repo1", "README.md"),
@@ -122,11 +108,12 @@ def test_print_results_multiple_repos(printer_cls, expected_calls, assert_click_
         ],
     )
 
-    assert_click_echo_calls(*expected_calls)
+    assert stream.getvalue() == expected
 
 
-def test_run_with_qualifiers(assert_click_echo_calls):
-    DefaultPrinter().print(
+def test_run_with_qualifiers():
+    stream = StringIO()
+    DefaultPrinter(stream).print(
         ["query", "org:foo", "filename:bar"],
         [
             build_mock_content_file("org/repo1", "README.md"),
@@ -134,9 +121,9 @@ def test_run_with_qualifiers(assert_click_echo_calls):
         ],
     )
 
-    assert_click_echo_calls(
-        call("Results:"),
-        call(" 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query%20filename%3Abar"),
-        call("\t- README.md"),
-        call("\t- file.txt"),
+    assert stream.getvalue() == (
+        "Results:\n"
+        " 2 - org/repo1: https://www.github.com/org/repo1/search?utf8=✓&q=query%20filename%3Abar\n"
+        "\t- README.md\n"
+        "\t- file.txt\n"
     )

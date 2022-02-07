@@ -1,8 +1,7 @@
 from collections import defaultdict
-from typing import Dict, List, Type
+from typing import IO, Dict, List, Type
 from urllib import parse
 
-import click
 from github.ContentFile import ContentFile
 
 
@@ -11,11 +10,15 @@ class Printer:
     def sanitize_qualifiers_for_search_url(query: List[str]) -> List[str]:
         return [q for q in query if not (q.startswith("repo:") or q.startswith("org:"))]
 
+    def __init__(self, stream: IO) -> None:
+        self._stream = stream
+
     def print(self, query: List[str], results: List[ContentFile]) -> None:
         results_per_repo = defaultdict(list)
         for result in results:
             results_per_repo[result.repository.full_name].append(result)
-        return self._print(query, results_per_repo)
+        self._print(query, results_per_repo)
+        self._stream.flush()
 
     def _print(self, query: List[str], results_per_repo: Dict[str, List[ContentFile]]) -> None:
         raise NotImplementedError()
@@ -38,10 +41,10 @@ def printers_list() -> List[str]:
     return list(_REGISTRY.keys())
 
 
-def printer_factory(name: str, force_repo_list_printer: bool = False) -> Printer:
+def printer_factory(name: str, stream: IO, force_repo_list_printer: bool = False) -> Printer:
     if force_repo_list_printer:
-        return RepoListPrinter()
-    return _REGISTRY[name]()
+        return RepoListPrinter(stream)
+    return _REGISTRY[name](stream)
 
 
 @register_printer
@@ -50,25 +53,25 @@ class DefaultPrinter(Printer):
 
     def _print(self, query: List[str], results_per_repo: Dict[str, List[ContentFile]]) -> None:
         if len(results_per_repo) == 0:
-            click.echo("No results!")
-            click.echo(
+            self._stream.write("No results!\n")
+            self._stream.write(
                 "(For limitations of GitHub's code search see https://docs.github.com/en/github/"
-                "searching-for-information-on-github/searching-code#considerations-for-code-search)"
+                "searching-for-information-on-github/searching-code#considerations-for-code-search)\n"
             )
             return
 
         sorted_results = sorted(results_per_repo.items(), key=lambda kv: len(kv[1]), reverse=True)
 
         q_param = parse.quote(" ".join(self.sanitize_qualifiers_for_search_url(query)))
-        click.echo("Results:")
+        self._stream.write("Results:\n")
         for repo, repo_results in sorted_results:
             repo_result = repo_results[0]
             url = f"{repo_result.repository.html_url}/search?utf8=✓&q={q_param}"
-            click.echo(f" {len(repo_results)} - {repo}: {url}")
+            self._stream.write(f" {len(repo_results)} - {repo}: {url}\n")
 
             repo_results.sort(key=lambda x: x.path)
             for result in repo_results:
-                click.echo(f"\t- {result.path}")
+                self._stream.write(f"\t- {result.path}\n")
 
 
 @register_printer
@@ -77,12 +80,12 @@ class RepoListPrinter(Printer):
 
     def _print(self, query: List[str], results_per_repo: Dict[str, List[ContentFile]]) -> None:
         for repo in results_per_repo:
-            click.echo(repo)
+            self._stream.write(repo + "\n")
 
 
 class StructuredPrinter(Printer):
     def _print(self, query: List[str], results_per_repo: Dict[str, List[ContentFile]]) -> None:
-        click.echo(self._serialise([self._build_repo_results(results_per_repo[repo]) for repo in results_per_repo]))
+        self._print_serialise([self._build_repo_results(results_per_repo[repo]) for repo in results_per_repo])
 
     @classmethod
     def _build_repo_results(cls, results: List[ContentFile]) -> Dict:
@@ -109,7 +112,7 @@ class StructuredPrinter(Printer):
             "html_url": result.html_url,
         }
 
-    def _serialise(self, structured_results: List[Dict]) -> str:
+    def _print_serialise(self, structured_results: List[Dict]) -> None:
         raise NotImplementedError()
 
 
@@ -117,17 +120,19 @@ class StructuredPrinter(Printer):
 class JsonPrinter(StructuredPrinter):
     NAME = "json"
 
-    def _serialise(self, structured_results: List[Dict]) -> str:
+    def _print_serialise(self, structured_results: List[Dict]) -> None:
         import json
 
-        return json.dumps(structured_results)
+        json.dump(structured_results, fp=self._stream)
 
 
 @register_printer
 class YamlPrinter(StructuredPrinter):
     NAME = "yaml"
 
-    def _serialise(self, structured_results: List[Dict]) -> str:
-        from ruamel import yaml
+    def _print_serialise(self, structured_results: List[Dict]) -> None:
+        from ruamel.yaml import YAML
 
-        return str(yaml.safe_dump(structured_results, default_flow_style=False))
+        yaml = YAML(typ="safe", pure=True)
+        yaml.default_flow_style = False
+        yaml.dump(structured_results, stream=self._stream)
