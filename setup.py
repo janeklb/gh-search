@@ -31,7 +31,6 @@ dev_requires = [
     "pip-tools~=5.3.1",
     "pytest-mock~=3.7.0",
     "pytest~=6.2.5",
-    "types-click~=7.1.2",
 ]
 
 

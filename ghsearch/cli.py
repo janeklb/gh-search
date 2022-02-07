@@ -60,6 +60,7 @@ _config_file = os.path.join(click.get_app_dir(_cmd_name), "config")
     "-o", "--output", help=f"Output style; one of: {', '.join(printers_list())}", callback=_printer, default="default"
 )
 @click.option("-v", "--verbose", help="Verbose output.", default=False, is_flag=True)
+@click.version_option(package_name="gh-search")
 @click_config_file.configuration_option(
     cmd_name="gh-search", help=f"Config file (default: {_config_file})", expose_value=True
 )
