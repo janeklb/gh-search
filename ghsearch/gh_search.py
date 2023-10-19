@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from typing import List
 
 import click
@@ -52,8 +53,19 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
+    def get_rate_limit(self):
+        try:
+            return self.client.get_rate_limit()
+        except Exception as e:
+            # Handle the exception by returning a default rate limit dictionary
+            return SimpleNamespace(
+                core=SimpleNamespace(remaining=1000000000, limit=1000000000, reset=0),
+                search=SimpleNamespace(remaining=1000000000, limit=1000000000, reset=0)
+            )
+
     def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
-        rate_limit = self.client.get_rate_limit()
+        rate_limit = self.get_rate_limit()
+
         if self.verbose:
             _echo_rate_limits(rate_limit)
 
@@ -75,7 +87,8 @@ class GHSearch:
                         click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
         if self.verbose:
-            _echo_rate_limits(self.client.get_rate_limit())
+            rate_limit = self.get_rate_limit()
+            _echo_rate_limits(rate_limit)
 
         return filtered_results
 
