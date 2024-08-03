@@ -16,21 +16,21 @@ def get_readme():
 
 
 install_requires = [
-    "click~=8.0.3",
+    "click~=8.1.7",
     "click-config-file~=0.6.0",
-    "PyGithub~=1.54.1",
-    "ruamel.yaml~=0.17.16",
+    "PyGithub~=2.3.0",
+    "ruamel.yaml~=0.18.6",
 ]
 
 dev_requires = [
-    "black~=22.1.0",
-    "coverage~=6.3.1",
-    "flake8~=3.7.7",
-    "isort~=5.10.1",
-    "mypy~=0.931",
-    "pip-tools~=5.3.1",
-    "pytest-mock~=3.7.0",
-    "pytest~=6.2.5",
+    "black~=24.8.0",
+    "coverage~=7.6.0",
+    "flake8~=7.1.0",
+    "isort~=5.13.2",
+    "mypy~=1.11.1",
+    "pip-tools~=7.4.1",
+    "pytest-mock~=3.14.0",
+    "pytest~=8.3.2",
 ]
 
 
@@ -44,15 +44,12 @@ setup(
     long_description_content_type="text/markdown",
     packages=find_packages(exclude="tests"),
     classifiers=[
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.12",
     ],
     install_requires=install_requires,
     setup_requires=["pytest-runner"],
     tests_require=dev_requires,
-    python_requires=">=3.7",
+    python_requires=">=3.12",
     extras_require={
         "dev": dev_requires,
     },

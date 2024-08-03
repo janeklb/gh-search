@@ -19,3 +19,7 @@ venv
 .coverage
 /htmlcov
 /build
+
+.envrc
+.direnv
+

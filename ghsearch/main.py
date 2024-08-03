@@ -11,7 +11,10 @@ from ghsearch.output import Printer
 
 
 def _build_filters(
-    path_filter: str = None, include_archived: bool = True, content_filter: str = None, regex_content_filter: str = None
+    path_filter: str | None = None,
+    include_archived: bool = True,
+    content_filter: str | None = None,
+    regex_content_filter: str | None = None,
 ) -> List[Filter]:
     filters: List[Filter] = []
     if path_filter:
@@ -29,10 +32,10 @@ def run(
     query: List[str],
     github_token: str,
     printer: Printer,
-    github_api_url: str = None,
-    path_filter: str = None,
-    content_filter: str = None,
-    regex_content_filter: str = None,
+    github_api_url: str | None = None,
+    path_filter: str | None = None,
+    content_filter: str | None = None,
+    regex_content_filter: str | None = None,
     include_archived: bool = False,
     verbose: bool = False,
 ) -> None:
