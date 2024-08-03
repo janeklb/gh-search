@@ -3,6 +3,7 @@ from typing import List
 import click
 import github
 from github.ContentFile import ContentFile
+from github.GithubException import GithubException
 from github.Rate import Rate
 from github.RateLimit import RateLimit
 
@@ -52,13 +53,25 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
+    def get_rate_limit(self) -> RateLimit | None:
+        try:
+            return self.client.get_rate_limit()
+        except GithubException as ge:
+            # 404 means that rate limiting is disabled
+            if ge.status == 404:
+                return None
+            raise ge
+
     def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
-        rate_limit = self.client.get_rate_limit()
-        if self.verbose:
+        rate_limit = self.get_rate_limit()
+
+        if rate_limit and self.verbose:
             _echo_rate_limits(rate_limit)
 
         results = self.client.search_code(query=" ".join(query))
-        self._check_core_limit_threshold(results.totalCount, rate_limit.core)
+
+        if rate_limit:
+            self._check_core_limit_threshold(results.totalCount, rate_limit.core)
 
         filtered_results = []
         with ProgressPrinter(overwrite=not self.verbose) as printer:
@@ -74,8 +87,9 @@ class GHSearch:
                     elif self.verbose:
                         click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
-        if self.verbose:
-            _echo_rate_limits(self.client.get_rate_limit())
+        rate_limit = self.get_rate_limit()
+        if rate_limit and self.verbose:
+            _echo_rate_limits(rate_limit)
 
         return filtered_results
 
