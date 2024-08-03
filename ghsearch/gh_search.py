@@ -1,9 +1,9 @@
-from types import SimpleNamespace
 from typing import List
 
 import click
 import github
 from github.ContentFile import ContentFile
+from github.GithubException import GithubException
 from github.Rate import Rate
 from github.RateLimit import RateLimit
 
@@ -40,11 +40,16 @@ Do you want to continue?""".strip(),
     )
 
 
-def _echo_rate_limits(rate_limit: RateLimit) -> None:
-    click.echo(
-        f"Core rate limit: {rate_limit.core.remaining}/{rate_limit.core.limit} (resets {rate_limit.core.reset}), "
-        f"Search rate limit: {rate_limit.search.remaining}/{rate_limit.search.limit} (resets {rate_limit.search.reset})"
-    )
+def _echo_rate_limits(rate_limit: RateLimit | None) -> None:
+    if rate_limit is None:
+        click.echo("(Rate limiting is disabled)")
+    else:
+        core = rate_limit.core
+        search = rate_limit.search
+        click.echo(
+            f"Core rate limit: {core.remaining}/{core.limit} (resets {core.reset}), "
+            f"Search rate limit: {search.remaining}/{search.limit} (resets {search.reset})"
+        )
 
 
 class GHSearch:
@@ -53,15 +58,14 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
-    def get_rate_limit(self):
+    def get_rate_limit(self) -> RateLimit | None:
         try:
             return self.client.get_rate_limit()
-        except Exception as e:
-            # Handle the exception by returning a default rate limit dictionary
-            return SimpleNamespace(
-                core=SimpleNamespace(remaining=1000000000, limit=1000000000, reset=0),
-                search=SimpleNamespace(remaining=1000000000, limit=1000000000, reset=0)
-            )
+        except GithubException as ge:
+            # 404 means that rate limiting is disabled
+            if ge.status == 404:
+                return None
+            raise ge
 
     def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
         rate_limit = self.get_rate_limit()
@@ -70,7 +74,9 @@ class GHSearch:
             _echo_rate_limits(rate_limit)
 
         results = self.client.search_code(query=" ".join(query))
-        self._check_core_limit_threshold(results.totalCount, rate_limit.core)
+
+        if rate_limit:
+            self._check_core_limit_threshold(results.totalCount, rate_limit.core)
 
         filtered_results = []
         with ProgressPrinter(overwrite=not self.verbose) as printer:
