@@ -10,19 +10,19 @@ GitHub code search with full text regex filtering, from your cli.
 
 ## Features
 
-* Filters search results (eg. ignore archived repositories or search for specific text in matched content)
-* Displays results grouped by `organisation/repository`
-* GitHub API rate limit aware (prevent accidentally consuming your entire core API quota)
-* Uses GitHub's [Rest API] (and therefore works with GitHub Enterprise)
+- Filters search results (eg. ignore archived repositories or search for specific text in matched content)
+- Displays results grouped by `organisation/repository`
+- GitHub API rate limit aware (prevent accidentally consuming your entire core API quota)
+- Uses GitHub's [Rest API] (and therefore works with GitHub Enterprise)
 
 [Rest API]: https://docs.github.com/en/rest/reference/search#search-code
 
 ## Installation
 
-`gh-search` is available as a python package via [pypi.org](https://pypi.org/project/gh-search/) and requires Python 3.7+
+`gh-search` is available as a python package via [pypi.org](https://pypi.org/project/gh-search/) and requires Python 3.12+
 
 ```bash
-pip install gh-search
+pipx install gh-search
 ```
 
 ## Authentication
@@ -50,7 +50,7 @@ _Note that `repo:` is a search qualifier natively supported by the GitHub Search
 If you are searching for a specific non-alphanumeric string you can use the `--regex-content-filter` (or `--content-filter`) options. This _must_
 be combined with a valid GitHub Search API query (which will produce the result set that will subsequently be filtered).
 
-For example if you're looking for a `special_var` variable being set to a value  of characters beginning with `10` you could do something like:
+For example if you're looking for a `special_var` variable being set to a value of characters beginning with `10` you could do something like:
 
 ```shell
 gh-search special_var -e "special_var\\s*=\\s*10"
