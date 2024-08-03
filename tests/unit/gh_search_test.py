@@ -128,6 +128,7 @@ Do you want to continue?""".strip(),
         abort=True,
     )
 
+
 def test_get_filtered_results_rate_limiting_disabled(mock_client, mock_click):
     mock_client.get_rate_limit.side_effect = github.GithubException(404, "Not Found")
     mock_client.search_code.return_value = MockPaginatedList(*[], total_count=0)
