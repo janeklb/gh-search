@@ -27,6 +27,9 @@ class DecodedContentFilter(Filter):
         except GithubException as e:
             message = f"Error reading content from {result.repository.full_name}/{result.path}: {e.data['message']}"
             raise FilterException(self, message) from e
+        except AssertionError as ae:
+            message = f"Error reading content from {result.repository.full_name}/{result.path}: {str(ae)}"
+            raise FilterException(self, message)
 
     def matches_content(self, content: str) -> bool:
         raise NotImplementedError
