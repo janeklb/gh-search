@@ -40,16 +40,11 @@ Do you want to continue?""".strip(),
     )
 
 
-def _echo_rate_limits(rate_limit: RateLimit | None) -> None:
-    if rate_limit is None:
-        click.echo("(Rate limiting is disabled)")
-    else:
-        core = rate_limit.core
-        search = rate_limit.search
-        click.echo(
-            f"Core rate limit: {core.remaining}/{core.limit} (resets {core.reset}), "
-            f"Search rate limit: {search.remaining}/{search.limit} (resets {search.reset})"
-        )
+def _echo_rate_limits(rate_limit: RateLimit) -> None:
+    click.echo(
+        f"Core rate limit: {rate_limit.core.remaining}/{rate_limit.core.limit} (resets {rate_limit.core.reset}), "
+        f"Search rate limit: {rate_limit.search.remaining}/{rate_limit.search.limit} (resets {rate_limit.search.reset})"
+    )
 
 
 class GHSearch:
@@ -70,7 +65,7 @@ class GHSearch:
     def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
         rate_limit = self.get_rate_limit()
 
-        if self.verbose:
+        if rate_limit and self.verbose:
             _echo_rate_limits(rate_limit)
 
         results = self.client.search_code(query=" ".join(query))
@@ -92,8 +87,8 @@ class GHSearch:
                     elif self.verbose:
                         click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
-        if self.verbose:
-            rate_limit = self.get_rate_limit()
+        rate_limit = self.get_rate_limit()
+        if rate_limit and self.verbose:
             _echo_rate_limits(rate_limit)
 
         return filtered_results
