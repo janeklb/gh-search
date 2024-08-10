@@ -127,3 +127,15 @@ Your current core api usage is 10000/10000 (resets sometime in the future)
 Do you want to continue?""".strip(),
         abort=True,
     )
+
+
+def test_get_filtered_results_rate_limiting_disabled(mock_client):
+    mock_client.get_rate_limit.side_effect = github.GithubException(404, "Not Found")
+    mock_filter = Mock()
+    mock_filter.uses_core_api = True
+
+    ghsearch = GHSearch(mock_client, [])
+    ghsearch.get_filtered_results(["query", "org:bort"])
+
+    # ensure get_rate_limit was called (and the side_effect above handled)
+    mock_client.get_rate_limit.assert_called()
