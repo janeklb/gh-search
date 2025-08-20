@@ -1,36 +1,36 @@
 install:
-	pip install -e .
+	uv sync
 
 install-dev:
-	pip install -e ".[dev]"
+	uv sync --group dev
 
 format:
-	isort -l 120 --profile black ghsearch/ tests/
-	black -l 120 -t py37 ghsearch/ tests/ *.py
+	uv run isort ghsearch/ tests/
+	uv run black ghsearch/ tests/
 
 black:
-	black -l 120 -t py37 --check ghsearch/ tests/ *.py
+	uv run black --check ghsearch/ tests/
 
 flake:
-	flake8 ghsearch/ tests/
+	uv run flake8 ghsearch/ tests/
 
 typing:
-	mypy -p ghsearch
+	uv run mypy -p ghsearch
 
 lint: black flake typing
 
 unit:
-	pytest -sv tests/unit
+	uv run pytest -sv tests/unit
 
 coverage-run:
-	coverage run --source=ghsearch/ --omit ghsearch/cli.py --branch -m pytest tests/unit --junitxml=build/test.xml -v
+	uv run coverage run --source=ghsearch/ --omit ghsearch/cli.py --branch -m pytest tests/unit --junitxml=build/test.xml -v
 
 coverage: coverage-run
-	coverage xml -i -o build/coverage.xml
-	coverage report
+	uv run coverage xml -i -o build/coverage.xml
+	uv run coverage report
 
 coverage-html: coverage-run
-	coverage html && open htmlcov/index.html
+	uv run coverage html && open htmlcov/index.html
 
 test: lint unit
 
