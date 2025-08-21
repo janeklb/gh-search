@@ -62,6 +62,5 @@ disallow_incomplete_defs = true
 show_error_codes = true
 pretty = false
 
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
