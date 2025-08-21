@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
     "click~=8.1.7",
     "click-config-file~=0.6.0",
-    "PyGithub~=2.3.0",
+    "pygithub~=2.3.0",
     "ruamel.yaml~=0.18.6",
 ]
 
