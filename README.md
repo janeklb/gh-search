@@ -107,7 +107,9 @@ Only the **core** API quota is checked because `gh-search`'s filters can make he
 
 ## Developing
 
-- `make install-dev` install dev dependencies (set up your own virtual environment first)
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
+- `make install-dev` install dev dependencies
 - `make unit` run unit tests
 - `make lint` run linters
 
