@@ -24,6 +24,7 @@ Your current core api usage is {core_rate.remaining}/{core_rate.limit} (resets {
 
 Do you want to continue?""".strip(),
         abort=True,
+        err=True,
     )
 
 
@@ -37,6 +38,7 @@ Your current core api usage is {core_rate.remaining}/{core_rate.limit} (resets {
 
 Do you want to continue?""".strip(),
         abort=True,
+        err=True,
     )
 
 
