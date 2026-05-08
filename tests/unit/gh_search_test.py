@@ -105,6 +105,7 @@ Your current core api usage is 1/10 (resets sometime in the future)
 
 Do you want to continue?""".strip(),
         abort=True,
+        err=True,
     )
 
 
@@ -126,6 +127,7 @@ Your current core api usage is 10000/10000 (resets sometime in the future)
 
 Do you want to continue?""".strip(),
         abort=True,
+        err=True,
     )
 
 
