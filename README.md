@@ -22,7 +22,7 @@ GitHub code search with full text regex filtering, from your cli.
 `gh-search` is available as a python package via [pypi.org](https://pypi.org/project/gh-search/) and requires Python 3.12+
 
 ```bash
-pipx install gh-search
+uv tool install gh-search
 ```
 
 ## Authentication
