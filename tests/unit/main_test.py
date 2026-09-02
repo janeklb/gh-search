@@ -106,8 +106,16 @@ def test_run_regex_content_filter_bad_regex(mock_printer):
 
 
 def test_run_path_filter(assert_click_echo_calls, mock_printer, mock_content_file_repo1_file):
-    run(["query"], "token", mock_printer, path_filter="file.txt")
+    run(["query"], "token", mock_printer, path_filter=r"\.txt$")
     mock_printer.print.assert_called_once_with(["query"], [mock_content_file_repo1_file])
+
+
+def test_run_path_filter_bad_regex(mock_printer):
+    with pytest.raises(
+        click.UsageError,
+        match="Failed to compile path regular expression from '\\[': unterminated character set at position 0",
+    ):
+        run(["query"], "token", mock_printer, path_filter="[")
 
 
 def test_run_when_raises_github_exception_422(mock_github, mock_printer):

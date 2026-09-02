@@ -53,9 +53,14 @@ class RegexContentFilter(DecodedContentFilter):
 
 
 class PathFilter(Filter):
+    uses_core_api = False
+
     def __init__(self, path_filter: str):
-        self.uses_core_api = False
-        self.path_filter = path_filter
+        try:
+            self.path_filter_pattern = re.compile(path_filter)
+        except re.error as e:
+            message = f"Failed to compile path regular expression from '{path_filter}': {e}"
+            raise FilterException(self, message) from e
 
     def __call__(self, result: ContentFile) -> bool:
-        return self.path_filter in result.path
+        return bool(self.path_filter_pattern.search(result.path))

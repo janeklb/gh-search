@@ -11,10 +11,9 @@ from . import build_mock_content_file
 @pytest.mark.parametrize(
     "path_matcher, path, expected_result",
     [
-        ("file.py", "path/to/file.py", True),
-        ("path", "path/to/file.py", True),
-        ("to/file", "path/to/file.py", True),
-        ("other.py", "path/to/file.py", False),
+        (r"\.py$", "path/to/file.py", True),
+        (r"^(src|tests)/", "path/to/file.py", False),
+        (r"^path/to/.*\.py$", "path/to/file.py", True),
     ],
 )
 def test_build_path_filter(path_matcher, path, expected_result):
@@ -23,6 +22,17 @@ def test_build_path_filter(path_matcher, path, expected_result):
 
     assert path_filter(mock_content_file) is expected_result
     assert path_filter.uses_core_api is False
+
+
+def test_build_path_filter_invalid_regex():
+    with pytest.raises(
+        FilterException,
+        match=(
+            "Failed to compile path regular expression from '\\[invalid regex': "
+            "unterminated character set at position 0"
+        ),
+    ):
+        PathFilter("[invalid regex")
 
 
 @pytest.mark.parametrize(

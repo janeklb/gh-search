@@ -73,7 +73,7 @@ Usage: gh-search [OPTIONS] QUERY...
 Options:
   --github-token TEXT             GitHub Auth Token. Will fall back on GITHUB_TOKEN envvar.
   --github-api-url TEXT           Override default GitHub API URL. Can also specify via GITHUB_API_URL envvar.
-  -p, --path-filter TEXT          Exclude results whose path (or part of path) does not match this.
+  -p, --path-filter TEXT          Exclude results whose path does not match this regular expression.
   -c, --content-filter TEXT       Exclude results whose content does not match this.
   -e, --regex-content-filter TEXT
                                   Exclude results whose content does not match this regex.
