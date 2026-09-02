@@ -5,22 +5,19 @@ from click import UsageError
 from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
-from ghsearch.filters import ContentFilter, Filter, FilterException, NotArchivedFilter, PathFilter, RegexContentFilter
+from ghsearch.filters import ContentFilter, Filter, FilterException, PathFilter, RegexContentFilter
 from ghsearch.gh_search import GHSearch
 from ghsearch.output import Printer
 
 
 def _build_filters(
     path_filter: str | None = None,
-    include_archived: bool = True,
     content_filter: str | None = None,
     regex_content_filter: str | None = None,
 ) -> List[Filter]:
     filters: List[Filter] = []
     if path_filter:
         filters.append(PathFilter(path_filter))
-    if not include_archived:
-        filters.append(NotArchivedFilter())
     if content_filter:
         filters.append(ContentFilter(content_filter))
     if regex_content_filter:
@@ -36,13 +33,12 @@ def run(
     path_filter: str | None = None,
     content_filter: str | None = None,
     regex_content_filter: str | None = None,
-    include_archived: bool = False,
     verbose: bool = False,
 ) -> None:
     client = build_client(github_token, github_api_url)
 
     try:
-        filters = _build_filters(path_filter, include_archived, content_filter, regex_content_filter)
+        filters = _build_filters(path_filter, content_filter, regex_content_filter)
     except FilterException as ex:
         raise UsageError(str(ex), click.get_current_context(silent=True))
 

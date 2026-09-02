@@ -27,19 +27,11 @@ def mock_content_file_repo1_file():
 
 
 @pytest.fixture
-def mock_content_file_repo2_src_other_archived():
-    return build_mock_content_file("org/repo2", "src/other.py", archived=True)
-
-
-@pytest.fixture
-def mock_github(
-    mock_content_file_repo1_readme, mock_content_file_repo1_file, mock_content_file_repo2_src_other_archived
-):
+def mock_github(mock_content_file_repo1_readme, mock_content_file_repo1_file):
     mock = Mock(spec=Github)
     mock.search_code.return_value = MockPaginatedList(
         mock_content_file_repo1_readme,
         mock_content_file_repo1_file,
-        mock_content_file_repo2_src_other_archived,
     )
     mock.get_rate_limit.side_effect = [
         MockRateLimit(45, 50, "soon", 10, 10, "soon"),
@@ -60,9 +52,7 @@ def mock_printer():
     return Mock(spec=Printer)
 
 
-def test_run_exclude_archived_by_default(
-    assert_click_echo_calls, mock_printer, mock_content_file_repo1_readme, mock_content_file_repo1_file
-):
+def test_run(assert_click_echo_calls, mock_printer, mock_content_file_repo1_readme, mock_content_file_repo1_file):
     run(["query"], "token", mock_printer)
     mock_printer.print.assert_called_once_with(
         ["query"],
@@ -83,26 +73,7 @@ def test_run_verbose(assert_click_echo_calls, mock_printer):
     run(["query"], "token", mock_printer, verbose=True)
     assert_click_echo_calls(
         call("Core rate limit: 45/50 (resets soon), Search rate limit: 10/10 (resets soon)"),
-        call("Skipping result for org/repo2 via NotArchivedFilter"),
         call("Core rate limit: 43/50 (resets even sooner), Search rate limit: 9/10 (resets even sooner)"),
-    )
-
-
-def test_run_include_archived(
-    assert_click_echo_calls,
-    mock_printer,
-    mock_content_file_repo1_readme,
-    mock_content_file_repo1_file,
-    mock_content_file_repo2_src_other_archived,
-):
-    run(["query"], "token", mock_printer, include_archived=True)
-    mock_printer.print.assert_called_once_with(
-        ["query"],
-        [
-            mock_content_file_repo1_readme,
-            mock_content_file_repo1_file,
-            mock_content_file_repo2_src_other_archived,
-        ],
     )
 
 
