@@ -56,6 +56,12 @@ For example if you're looking for a `special_var` variable being set to a value 
 gh-search special_var -e "special_var\\s*=\\s*10"
 ```
 
+### Archived repositories
+
+GitHub code search does not index archived repositories, so `gh-search` cannot
+search them. Clone or download an archived repository and search it locally
+instead.
+
 ### All available options
 
 ```text
@@ -71,7 +77,6 @@ Options:
   -c, --content-filter TEXT       Exclude results whose content does not match this.
   -e, --regex-content-filter TEXT
                                   Exclude results whose content does not match this regex.
-  -a, --include-archived          Include results from archived repos.
   -l, --repos-with-matches        Only the names of repos are printed. Equivalent to --output=repo-list
   -o, --output TEXT               Output style; one of: default, repo-list, json, yaml
   -v, --verbose                   Verbose output.

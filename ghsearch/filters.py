@@ -52,16 +52,6 @@ class RegexContentFilter(DecodedContentFilter):
         return bool(self.content_filter_pattern.search(content))
 
 
-class NotArchivedFilter(Filter):
-    def __init__(self):
-        self.cache = {}
-
-    def __call__(self, result: ContentFile) -> bool:
-        if result.repository.full_name not in self.cache:
-            self.cache[result.repository.full_name] = not result.repository.archived
-        return self.cache[result.repository.full_name]
-
-
 class PathFilter(Filter):
     def __init__(self, path_filter: str):
         self.uses_core_api = False

@@ -48,7 +48,6 @@ _config_file = os.path.join(click.get_app_dir(_cmd_name), "config")
 @click.option("-p", "--path-filter", help="Exclude results whose path (or part of path) does not match this.")
 @click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
 @click.option("-e", "--regex-content-filter", help="Exclude results whose content does not match this regex.")
-@click.option("-a", "--include-archived", help="Include results from archived repos.", default=False, is_flag=True)
 @click.option(
     "-l",
     "--repos-with-matches",
@@ -67,7 +66,6 @@ _config_file = os.path.join(click.get_app_dir(_cmd_name), "config")
 def cli(
     query,
     output,
-    include_archived,
     verbose,
     config,
     github_token,
@@ -87,7 +85,6 @@ def cli(
         path_filter=path_filter,
         content_filter=content_filter,
         regex_content_filter=regex_content_filter,
-        include_archived=include_archived,
         verbose=verbose,
     )
 
