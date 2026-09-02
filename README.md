@@ -77,6 +77,9 @@ Options:
   -c, --content-filter TEXT       Exclude results whose content does not match this.
   -e, --regex-content-filter TEXT
                                   Exclude results whose content does not match this regex.
+  -m, --max-results INTEGER RANGE
+                                  Stop after this many matching results.
+                                  [x>=1]
   -l, --repos-with-matches        Only the names of repos are printed. Equivalent to --output=repo-list
   -o, --output TEXT               Output style; one of: default, repo-list, json, yaml
   -v, --verbose                   Verbose output.

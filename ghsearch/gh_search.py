@@ -1,9 +1,11 @@
-from typing import List
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Dict, Iterator, List
 
 import click
 import github
 from github.ContentFile import ContentFile
-from github.GithubException import GithubException
+from github.GithubException import GithubException, RateLimitExceededException
 from github.Rate import Rate
 from github.RateLimit import RateLimit
 
@@ -12,6 +14,88 @@ from ghsearch.terminal import ProgressPrinter
 
 CORE_CALLS_RELATIVE_LIMIT = 0.1
 CORE_CALLS_ABSOLUTE_LIMIT = 500
+MAX_SEARCH_RESULTS = 1000
+RESULTS_PER_PAGE = 100
+
+
+@dataclass
+class SearchRateLimit:
+    remaining: int | None
+    reset: datetime | None
+
+
+@dataclass
+class CodeSearchPage:
+    results: List[ContentFile]
+    total_count: int
+    incomplete_results: bool
+    rate_limit: SearchRateLimit
+    has_next_page: bool
+    reached_result_ceiling: bool
+
+
+@dataclass
+class SearchOutcome:
+    results: List[ContentFile] = field(default_factory=list)
+    total_count: int = 0
+    retrieved_count: int = 0
+    truncated: bool = False
+    truncation_reason: str | None = None
+    search_rate_limit: SearchRateLimit | None = None
+
+
+class CodeSearchRateLimitError(Exception):
+    def __init__(self, rate_limit: SearchRateLimit):
+        self.rate_limit = rate_limit
+
+
+class CodeSearchPaginator:
+    def __init__(self, client: github.Github):
+        self.client = client
+        # PyGithub does not expose code-search response metadata publicly.
+        self.requester = getattr(client, "_Github__requester")
+
+    @staticmethod
+    def _rate_limit_from_headers(headers: Dict[str, str]) -> SearchRateLimit:
+        remaining = headers.get("x-ratelimit-remaining")
+        reset = headers.get("x-ratelimit-reset")
+        return SearchRateLimit(
+            remaining=int(remaining) if remaining is not None else None,
+            reset=datetime.fromtimestamp(int(reset), tz=timezone.utc) if reset is not None else None,
+        )
+
+    def pages(self, query: str) -> Iterator[CodeSearchPage]:
+        page = 1
+        retrieved_count = 0
+
+        while True:
+            try:
+                headers, data = self.requester.requestJsonAndCheck(
+                    "GET",
+                    "/search/code",
+                    parameters={"q": query, "page": page, "per_page": RESULTS_PER_PAGE},
+                )
+            except RateLimitExceededException as ex:
+                raise CodeSearchRateLimitError(self._rate_limit_from_headers(ex.headers or {})) from ex
+
+            results = [self.client.create_from_raw_data(ContentFile, result, headers) for result in data["items"]]
+            retrieved_count += len(results)
+            total_count = data["total_count"]
+            rate_limit = self._rate_limit_from_headers(headers)
+            has_next_page = 'rel="next"' in headers.get("link", "")
+            reached_result_ceiling = retrieved_count >= MAX_SEARCH_RESULTS and total_count > MAX_SEARCH_RESULTS
+            yield CodeSearchPage(
+                results=results,
+                total_count=total_count,
+                incomplete_results=data.get("incomplete_results", False),
+                rate_limit=rate_limit,
+                has_next_page=has_next_page,
+                reached_result_ceiling=reached_result_ceiling,
+            )
+
+            if not has_next_page or reached_result_ceiling or rate_limit.remaining == 0:
+                return
+            page += 1
 
 
 def _confirm_continue_many_calls(core_rate: Rate, num_results: int, calls_per_res: int) -> None:
@@ -64,36 +148,56 @@ class GHSearch:
                 return None
             raise ge
 
-    def get_filtered_results(self, query: List[str]) -> List[ContentFile]:
+    def get_filtered_results(self, query: List[str], max_results: int | None = None) -> SearchOutcome:
         rate_limit = self.get_rate_limit()
 
         if rate_limit and self.verbose:
             _echo_rate_limits(rate_limit)
 
-        results = self.client.search_code(query=" ".join(query))
+        outcome = SearchOutcome()
+        paginator = CodeSearchPaginator(self.client)
 
-        if rate_limit:
-            self._check_core_limit_threshold(results.totalCount, rate_limit.core)
-
-        filtered_results = []
         with ProgressPrinter(overwrite=not self.verbose) as printer:
-            for result in results:
-                printer(f"Checking result for {result.repository.full_name}")
-                try:
-                    exclude_reason = self._should_exclude(result)
-                except FilterException as e:
-                    printer(str(e), force=True)
-                else:
-                    if not exclude_reason:
-                        filtered_results.append(result)
-                    elif self.verbose:
-                        click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
+            for page in paginator.pages(" ".join(query)):
+                outcome.total_count = page.total_count
+                outcome.search_rate_limit = page.rate_limit
+                outcome.retrieved_count += len(page.results)
+
+                if rate_limit:
+                    self._check_core_limit_threshold(page.total_count, rate_limit.core)
+                    rate_limit = None
+
+                for result in page.results:
+                    printer(f"Checking result for {result.repository.full_name}")
+                    try:
+                        exclude_reason = self._should_exclude(result)
+                    except FilterException as e:
+                        printer(str(e), force=True)
+                    else:
+                        if not exclude_reason:
+                            outcome.results.append(result)
+                            if max_results is not None and len(outcome.results) >= max_results:
+                                outcome.truncated = True
+                                outcome.truncation_reason = "max_results"
+                                return outcome
+                        elif self.verbose:
+                            click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
+
+                if page.incomplete_results:
+                    outcome.truncated = True
+                    outcome.truncation_reason = "incomplete_results"
+                if page.reached_result_ceiling:
+                    outcome.truncated = True
+                    outcome.truncation_reason = "result_ceiling"
+                if page.has_next_page and page.rate_limit.remaining == 0:
+                    outcome.truncated = True
+                    outcome.truncation_reason = "rate_limit"
 
         rate_limit = self.get_rate_limit()
         if rate_limit and self.verbose:
             _echo_rate_limits(rate_limit)
 
-        return filtered_results
+        return outcome
 
     def _should_exclude(self, result):
         for result_filter in self.filters:

@@ -6,7 +6,7 @@ from github.GithubException import BadCredentialsException, GithubException
 
 from ghsearch.client import build_client
 from ghsearch.filters import ContentFilter, Filter, FilterException, PathFilter, RegexContentFilter
-from ghsearch.gh_search import GHSearch
+from ghsearch.gh_search import CodeSearchRateLimitError, GHSearch, SearchOutcome
 from ghsearch.output import Printer
 
 
@@ -25,6 +25,18 @@ def _build_filters(
     return filters
 
 
+def _warn_if_search_is_truncated(outcome: SearchOutcome) -> None:
+    if outcome.truncation_reason == "incomplete_results":
+        click.echo("Warning: GitHub reported incomplete code-search results. Narrow the query and retry.", err=True)
+    elif outcome.truncation_reason == "result_ceiling":
+        click.echo("Warning: GitHub returns at most 1,000 code-search results. Narrow the query and retry.", err=True)
+    elif outcome.truncation_reason == "max_results":
+        click.echo("Warning: Stopped after --max-results matching results. More matches may exist.", err=True)
+    elif outcome.truncation_reason == "rate_limit":
+        reset = outcome.search_rate_limit.reset if outcome.search_rate_limit else None
+        click.echo(f"Warning: Code-search rate limit exhausted. Retry after {reset}.", err=True)
+
+
 def run(
     query: List[str],
     github_token: str,
@@ -33,6 +45,7 @@ def run(
     path_filter: str | None = None,
     content_filter: str | None = None,
     regex_content_filter: str | None = None,
+    max_results: int | None = None,
     verbose: bool = False,
 ) -> None:
     client = build_client(github_token, github_api_url)
@@ -44,9 +57,10 @@ def run(
 
     try:
         gh_search = GHSearch(client, filters, verbose)
-        results = gh_search.get_filtered_results(query)
+        outcome = gh_search.get_filtered_results(query, max_results)
 
-        printer.print(query, results)
+        printer.print(query, outcome.results)
+        _warn_if_search_is_truncated(outcome)
 
     except BadCredentialsException as ex:
         raise UsageError(f"Bad Credentials: {ex}", click.get_current_context(silent=True))
@@ -56,3 +70,8 @@ def run(
             errors = ", ".join(err["message"] for err in ex.data.get("errors", []) if isinstance(err, dict))
             raise UsageError(f"{message} (GitHub Exception): {errors}", click.get_current_context(silent=True))
         raise ex
+    except CodeSearchRateLimitError as ex:
+        raise UsageError(
+            f"GitHub code-search rate limit exhausted. Retry after {ex.rate_limit.reset}.",
+            click.get_current_context(silent=True),
+        )

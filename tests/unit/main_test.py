@@ -2,12 +2,13 @@ from unittest.mock import Mock, call, patch
 
 import click
 import pytest
-from github import BadCredentialsException, Github, GithubException
+from github import BadCredentialsException, GithubException
 
-from ghsearch.main import run
+from ghsearch.gh_search import SearchOutcome
+from ghsearch.main import _warn_if_search_is_truncated, run
 from ghsearch.output import Printer
 
-from . import MockPaginatedList, MockRateLimit, build_mock_content_file
+from . import MockRateLimit, build_mock_content_file
 
 
 @pytest.fixture(autouse=True)
@@ -28,11 +29,12 @@ def mock_content_file_repo1_file():
 
 @pytest.fixture
 def mock_github(mock_content_file_repo1_readme, mock_content_file_repo1_file):
-    mock = Mock(spec=Github)
-    mock.search_code.return_value = MockPaginatedList(
-        mock_content_file_repo1_readme,
-        mock_content_file_repo1_file,
+    mock = Mock()
+    mock._Github__requester.requestJsonAndCheck.return_value = (
+        {"x-ratelimit-remaining": "9", "x-ratelimit-reset": "0"},
+        {"items": [{}, {}], "total_count": 2, "incomplete_results": False},
     )
+    mock.create_from_raw_data.side_effect = [mock_content_file_repo1_readme, mock_content_file_repo1_file]
     mock.get_rate_limit.side_effect = [
         MockRateLimit(45, 50, "soon", 10, 10, "soon"),
         MockRateLimit(43, 50, "even sooner", 9, 10, "even sooner"),
@@ -64,7 +66,7 @@ def test_run(assert_click_echo_calls, mock_printer, mock_content_file_repo1_read
 
 
 def test_run_bad_credentials(assert_click_echo_calls, mock_github, mock_printer):
-    mock_github.search_code.side_effect = BadCredentialsException(404, "No!")
+    mock_github._Github__requester.requestJsonAndCheck.side_effect = BadCredentialsException(404, "No!")
     with pytest.raises(click.UsageError, match='Bad Credentials: 404 "No!"'):
         run(["query"], "bad-credentials", mock_printer)
 
@@ -119,7 +121,7 @@ def test_run_path_filter_bad_regex(mock_printer):
 
 
 def test_run_when_raises_github_exception_422(mock_github, mock_printer):
-    mock_github.search_code.side_effect = GithubException(
+    mock_github._Github__requester.requestJsonAndCheck.side_effect = GithubException(
         422, {"message": "Fail!", "errors": [{"message": "reason1"}, {"message": "reason2"}]}
     )
 
@@ -128,7 +130,21 @@ def test_run_when_raises_github_exception_422(mock_github, mock_printer):
 
 
 def test_run_when_raises_github_exception(mock_github, mock_printer):
-    mock_github.search_code.side_effect = GithubException(400, "")
+    mock_github._Github__requester.requestJsonAndCheck.side_effect = GithubException(400, "")
 
     with pytest.raises(GithubException):
         run(["query"], "token", mock_printer)
+
+
+@pytest.mark.parametrize(
+    "reason, expected_message",
+    [
+        ("incomplete_results", "Warning: GitHub reported incomplete code-search results. Narrow the query and retry."),
+        ("result_ceiling", "Warning: GitHub returns at most 1,000 code-search results. Narrow the query and retry."),
+        ("max_results", "Warning: Stopped after --max-results matching results. More matches may exist."),
+    ],
+)
+def test_warn_if_search_is_truncated(mock_click_echo, reason, expected_message):
+    _warn_if_search_is_truncated(SearchOutcome(truncated=True, truncation_reason=reason))
+
+    mock_click_echo.assert_called_once_with(expected_message, err=True)
