@@ -110,6 +110,8 @@ github_api_url="<THE API URL>"
 
 Only the **core** API quota is checked because `gh-search`'s filters can make heavy use it. The **search** API quota is _not_ checked.
 
+GitHub can return incomplete code-search results. When this happens, `gh-search` prints a warning; narrow the query and retry.
+
 ## Developing
 
 This project uses [uv](https://docs.astral.sh/uv/) for dependency management.

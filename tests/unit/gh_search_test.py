@@ -58,6 +58,16 @@ def test_get_filtered_results_without_filters(mock_client, mock_result_1, mock_r
     assert repos == [mock_result_1, mock_result_2, mock_result_3]
 
 
+def test_get_filtered_results_warns_about_incomplete_results(mock_client, mock_result_1, mock_click):
+    mock_client.search_code.return_value = MockPaginatedList(mock_result_1, incomplete_results=True)
+
+    GHSearch(mock_client, []).get_filtered_results(["query"])
+
+    mock_click.echo.assert_called_once_with(
+        "Warning: GitHub reported incomplete code-search results. Narrow the query and retry.", err=True
+    )
+
+
 def test_get_filtered_results_with_filters(mock_client, mock_result_1, mock_result_2, mock_result_3):
     ghsearch = GHSearch(mock_client, [Mock(side_effect=[True, False, True])])
     repos = ghsearch.get_filtered_results(["query", "org:bort"])
