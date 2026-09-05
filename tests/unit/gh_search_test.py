@@ -6,7 +6,6 @@ import pytest
 from ghsearch.filters import FilterException
 from ghsearch.gh_search import (
     TRUNCATION_REASON_INCOMPLETE_RESULTS,
-    TRUNCATION_REASON_MAX_RESULTS,
     TRUNCATION_REASON_RATE_LIMIT,
     TRUNCATION_REASON_RESULT_CEILING,
     CodeSearchRateLimitError,
@@ -219,15 +218,6 @@ def test_get_filtered_results_stops_at_search_rate_limit(mock_client, mock_resul
     assert outcome.truncated is True
     assert outcome.truncation_reason == TRUNCATION_REASON_RATE_LIMIT
     assert mock_client._Github__requester.requestJsonAndCheck.call_count == 1
-
-
-def test_get_filtered_results_stops_at_max_results(mock_client, mock_result_1, mock_result_2):
-    outcome = GHSearch(mock_client, []).get_filtered_results(["query"], max_results=1)
-
-    assert outcome.results == [mock_result_1]
-    assert outcome.truncated is True
-    assert outcome.truncation_reason == TRUNCATION_REASON_MAX_RESULTS
-    assert mock_client.create_from_raw_data.call_count == 3
 
 
 def test_get_filtered_results_reports_refused_search_rate_limit(mock_client):

@@ -48,7 +48,6 @@ _config_file = os.path.join(click.get_app_dir(_cmd_name), "config")
 @click.option("-p", "--path-filter", help="Exclude results whose path does not match this regular expression.")
 @click.option("-c", "--content-filter", help="Exclude results whose content does not match this.")
 @click.option("-e", "--regex-content-filter", help="Exclude results whose content does not match this regex.")
-@click.option("-m", "--max-results", type=click.IntRange(min=1), help="Stop after this many matching results.")
 @click.option(
     "-l",
     "--repos-with-matches",
@@ -74,7 +73,6 @@ def cli(
     path_filter=None,
     content_filter=None,
     regex_content_filter=None,
-    max_results=None,
     **_,
 ):
     if verbose:
@@ -87,7 +85,6 @@ def cli(
         path_filter=path_filter,
         content_filter=content_filter,
         regex_content_filter=regex_content_filter,
-        max_results=max_results,
         verbose=verbose,
     )
 

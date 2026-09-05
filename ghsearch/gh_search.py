@@ -19,7 +19,6 @@ RESULTS_PER_PAGE = 100
 TRUNCATION_REASON_INCOMPLETE_RESULTS = "incomplete_results"
 TRUNCATION_REASON_RESULT_CEILING = "result_ceiling"
 TRUNCATION_REASON_RATE_LIMIT = "rate_limit"
-TRUNCATION_REASON_MAX_RESULTS = "max_results"
 
 
 @dataclass
@@ -152,7 +151,7 @@ class GHSearch:
                 return None
             raise ge
 
-    def get_filtered_results(self, query: List[str], max_results: int | None = None) -> SearchOutcome:
+    def get_filtered_results(self, query: List[str]) -> SearchOutcome:
         rate_limit = self.get_rate_limit()
 
         if rate_limit and self.verbose:
@@ -180,10 +179,6 @@ class GHSearch:
                     else:
                         if not exclude_reason:
                             outcome.results.append(result)
-                            if max_results is not None and len(outcome.results) >= max_results:
-                                outcome.truncated = True
-                                outcome.truncation_reason = TRUNCATION_REASON_MAX_RESULTS
-                                return outcome
                         elif self.verbose:
                             click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 

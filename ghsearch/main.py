@@ -8,7 +8,6 @@ from ghsearch.client import build_client
 from ghsearch.filters import ContentFilter, Filter, FilterException, PathFilter, RegexContentFilter
 from ghsearch.gh_search import (
     TRUNCATION_REASON_INCOMPLETE_RESULTS,
-    TRUNCATION_REASON_MAX_RESULTS,
     TRUNCATION_REASON_RATE_LIMIT,
     TRUNCATION_REASON_RESULT_CEILING,
     CodeSearchRateLimitError,
@@ -38,8 +37,6 @@ def _warn_if_search_is_truncated(outcome: SearchOutcome) -> None:
         click.echo("Warning: GitHub reported incomplete code-search results. Narrow the query and retry.", err=True)
     elif outcome.truncation_reason == TRUNCATION_REASON_RESULT_CEILING:
         click.echo("Warning: GitHub returns at most 1,000 code-search results. Narrow the query and retry.", err=True)
-    elif outcome.truncation_reason == TRUNCATION_REASON_MAX_RESULTS:
-        click.echo("Warning: Stopped after --max-results matching results. More matches may exist.", err=True)
     elif outcome.truncation_reason == TRUNCATION_REASON_RATE_LIMIT:
         reset = outcome.search_rate_limit.reset if outcome.search_rate_limit else None
         click.echo(f"Warning: Code-search rate limit exhausted. Retry after {reset}.", err=True)
@@ -53,7 +50,6 @@ def run(
     path_filter: str | None = None,
     content_filter: str | None = None,
     regex_content_filter: str | None = None,
-    max_results: int | None = None,
     verbose: bool = False,
 ) -> None:
     client = build_client(github_token, github_api_url)
@@ -65,7 +61,7 @@ def run(
 
     try:
         gh_search = GHSearch(client, filters, verbose)
-        outcome = gh_search.get_filtered_results(query, max_results)
+        outcome = gh_search.get_filtered_results(query)
 
         printer.print(query, outcome.results)
         _warn_if_search_is_truncated(outcome)
