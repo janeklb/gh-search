@@ -16,6 +16,10 @@ CORE_CALLS_RELATIVE_LIMIT = 0.1
 CORE_CALLS_ABSOLUTE_LIMIT = 500
 MAX_SEARCH_RESULTS = 1000
 RESULTS_PER_PAGE = 100
+TRUNCATION_REASON_INCOMPLETE_RESULTS = "incomplete_results"
+TRUNCATION_REASON_RESULT_CEILING = "result_ceiling"
+TRUNCATION_REASON_RATE_LIMIT = "rate_limit"
+TRUNCATION_REASON_MAX_RESULTS = "max_results"
 
 
 @dataclass
@@ -178,20 +182,20 @@ class GHSearch:
                             outcome.results.append(result)
                             if max_results is not None and len(outcome.results) >= max_results:
                                 outcome.truncated = True
-                                outcome.truncation_reason = "max_results"
+                                outcome.truncation_reason = TRUNCATION_REASON_MAX_RESULTS
                                 return outcome
                         elif self.verbose:
                             click.echo(f"Skipping result for {result.repository.full_name} via {exclude_reason}")
 
                 if page.incomplete_results:
                     outcome.truncated = True
-                    outcome.truncation_reason = "incomplete_results"
+                    outcome.truncation_reason = TRUNCATION_REASON_INCOMPLETE_RESULTS
                 if page.reached_result_ceiling:
                     outcome.truncated = True
-                    outcome.truncation_reason = "result_ceiling"
+                    outcome.truncation_reason = TRUNCATION_REASON_RESULT_CEILING
                 if page.has_next_page and page.rate_limit.remaining == 0:
                     outcome.truncated = True
-                    outcome.truncation_reason = "rate_limit"
+                    outcome.truncation_reason = TRUNCATION_REASON_RATE_LIMIT
 
         rate_limit = self.get_rate_limit()
         if rate_limit and self.verbose:

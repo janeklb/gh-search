@@ -4,7 +4,12 @@ import click
 import pytest
 from github import BadCredentialsException, GithubException
 
-from ghsearch.gh_search import SearchOutcome
+from ghsearch.gh_search import (
+    TRUNCATION_REASON_INCOMPLETE_RESULTS,
+    TRUNCATION_REASON_MAX_RESULTS,
+    TRUNCATION_REASON_RESULT_CEILING,
+    SearchOutcome,
+)
 from ghsearch.main import _warn_if_search_is_truncated, run
 from ghsearch.output import Printer
 
@@ -139,9 +144,18 @@ def test_run_when_raises_github_exception(mock_github, mock_printer):
 @pytest.mark.parametrize(
     "reason, expected_message",
     [
-        ("incomplete_results", "Warning: GitHub reported incomplete code-search results. Narrow the query and retry."),
-        ("result_ceiling", "Warning: GitHub returns at most 1,000 code-search results. Narrow the query and retry."),
-        ("max_results", "Warning: Stopped after --max-results matching results. More matches may exist."),
+        (
+            TRUNCATION_REASON_INCOMPLETE_RESULTS,
+            "Warning: GitHub reported incomplete code-search results. Narrow the query and retry.",
+        ),
+        (
+            TRUNCATION_REASON_RESULT_CEILING,
+            "Warning: GitHub returns at most 1,000 code-search results. Narrow the query and retry.",
+        ),
+        (
+            TRUNCATION_REASON_MAX_RESULTS,
+            "Warning: Stopped after --max-results matching results. More matches may exist.",
+        ),
     ],
 )
 def test_warn_if_search_is_truncated(mock_click_echo, reason, expected_message):
