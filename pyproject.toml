@@ -23,14 +23,14 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black~=24.8.0",
+    "black~=26.3.1",
     "coverage~=7.6.0",
     "flake8~=7.1.0",
     "isort~=5.13.2",
     "mypy~=1.11.1",
     "pip-tools~=7.4.1",
     "pytest-mock~=3.14.0",
-    "pytest~=8.3.2",
+    "pytest~=9.0.3",
 ]
 
 [project.scripts]
