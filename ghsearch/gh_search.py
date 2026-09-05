@@ -5,7 +5,7 @@ import github
 from github.ContentFile import ContentFile
 from github.GithubException import GithubException
 from github.Rate import Rate
-from github.RateLimit import RateLimit
+from github.RateLimitOverview import RateLimitOverview
 
 from ghsearch.filters import Filter, FilterException
 from ghsearch.terminal import ProgressPrinter
@@ -42,10 +42,12 @@ Do you want to continue?""".strip(),
     )
 
 
-def _echo_rate_limits(rate_limit: RateLimit) -> None:
+def _echo_rate_limits(rate_limit: RateLimitOverview) -> None:
     click.echo(
-        f"Core rate limit: {rate_limit.core.remaining}/{rate_limit.core.limit} (resets {rate_limit.core.reset}), "
-        f"Search rate limit: {rate_limit.search.remaining}/{rate_limit.search.limit} (resets {rate_limit.search.reset})"
+        f"Core rate limit: {rate_limit.resources.core.remaining}/{rate_limit.resources.core.limit} "
+        f"(resets {rate_limit.resources.core.reset}), Search rate limit: "
+        f"{rate_limit.resources.search.remaining}/{rate_limit.resources.search.limit} "
+        f"(resets {rate_limit.resources.search.reset})"
     )
 
 
@@ -55,7 +57,7 @@ class GHSearch:
         self.filters = filters
         self.verbose = verbose
 
-    def get_rate_limit(self) -> RateLimit | None:
+    def get_rate_limit(self) -> RateLimitOverview | None:
         try:
             return self.client.get_rate_limit()
         except GithubException as ge:
@@ -72,10 +74,13 @@ class GHSearch:
 
         results = self.client.search_code(query=" ".join(query))
 
-        if rate_limit:
-            self._check_core_limit_threshold(results.totalCount, rate_limit.core)
+        if results.incomplete_results:
+            click.echo("Warning: GitHub reported incomplete code-search results. Narrow the query and retry.", err=True)
 
-        filtered_results = []
+        if rate_limit:
+            self._check_core_limit_threshold(results.totalCount, rate_limit.resources.core)
+
+        filtered_results: List[ContentFile] = []
         with ProgressPrinter(overwrite=not self.verbose) as printer:
             for result in results:
                 printer(f"Checking result for {result.repository.full_name}")

@@ -5,9 +5,10 @@ from github.ContentFile import ContentFile
 
 
 class MockPaginatedList:
-    def __init__(self, *items, total_count=None):
+    def __init__(self, *items, total_count=None, incomplete_results=None):
         self.items = items
         self.totalCount = total_count if total_count else len(items)
+        self.incomplete_results = incomplete_results
 
     def __iter__(self):
         return iter(self.items)
@@ -15,8 +16,10 @@ class MockPaginatedList:
 
 class MockRateLimit:
     def __init__(self, core_remaining, core_limit, core_reset, search_remaining, search_limit, search_reset):
-        self.core = SimpleNamespace(remaining=core_remaining, limit=core_limit, reset=core_reset)
-        self.search = SimpleNamespace(remaining=search_remaining, limit=search_limit, reset=search_reset)
+        self.resources = SimpleNamespace(
+            core=SimpleNamespace(remaining=core_remaining, limit=core_limit, reset=core_reset),
+            search=SimpleNamespace(remaining=search_remaining, limit=search_limit, reset=search_reset),
+        )
 
 
 def build_mock_content_file(
